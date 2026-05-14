@@ -1,0 +1,51 @@
+from . import loader
+from . import csmath
+import csgame as cg
+import System
+from System import Action
+import os
+
+# --- Fix for Silk.NET Native Dependencies ---
+# We use the path from your loader.py to find native DLLs
+dll_dir = loader.dll_dir 
+if os.path.exists(dll_dir):
+    if hasattr(os, 'add_dll_directory'):
+        os.add_dll_directory(dll_dir)
+    os.environ['PATH'] = dll_dir + os.pathsep + os.environ['PATH']
+
+
+
+
+def add(a: int, b: int) -> int:
+    """Returns the sum of two values using the C# backend."""
+    _cs_tester = cg.test()
+    return _cs_tester.add(a, b)
+
+def create_window(title: str, size: csmath.Vector2):
+    """
+    Wraps the MyWindow C# class. 
+    Matches constructor: MyWindow(Vector2d<int> size, string title)
+    """
+    return cg.MyWindow(size, title)
+
+
+
+# --- Callbacks for the Window Loop ---
+
+def on_load(window):
+    """
+    This is called when the window starts up.
+    FIXED: Removed 'window.Title' access which caused the crash.
+    """
+    print("Window loaded successfully!")
+
+def on_update(delta_time):
+    """
+    This is called every frame.
+    """
+    pass
+
+def run(win):
+    load_action = Action[cg.MyWindow](on_load)
+    update_action = Action[System.Double](on_update)
+    win.Run(load_action, update_action)
