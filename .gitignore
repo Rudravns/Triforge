@@ -36,3 +36,5 @@ Ignore the compiled renderer output specifically if you want to rebuild it each 
 src/renderer/renderer/bin/
 
 src/renderer/renderer/obj/
+
+src\renderer
