@@ -1,0 +1,40 @@
+#--- Python ---
+
+pycache/
+*.py[cod]
+*$py.class
+.env
+.venv
+env/
+venv/
+ENV/
+.vscode/
+
+#--- .NET / C# ---
+
+bin/
+obj/
+*.user
+*.userosscache
+*.sln.docstates
+.vs/
+
+#--- Native / OS ---
+
+*.dll
+*.exe
+*.pdb
+*.so
+*.dylib
+.DS_Store
+Thumbs.db
+
+#--- Project Specific ---
+
+Ignore the compiled renderer output specifically if you want to rebuild it each time
+
+src/renderer/renderer/bin/
+
+src/renderer/renderer/obj/
+
+src\renderer
