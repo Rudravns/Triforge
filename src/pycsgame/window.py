@@ -1,3 +1,5 @@
+# pyright: reportMissingImports=false
+
 from . import loader
 from . import csmath
 import csgame as cg
@@ -14,20 +16,21 @@ if os.path.exists(dll_dir):
     os.environ['PATH'] = dll_dir + os.pathsep + os.environ['PATH']
 
 
-
-
 def add(a: int, b: int) -> int:
     """Returns the sum of two values using the C# backend."""
     _cs_tester = cg.test()
     return _cs_tester.add(a, b)
 
-def create_window(title: str, size: csmath.Vector2):
+def create_window(size: csmath.Vector2, title: str|None = None):
     """
     Wraps the MyWindow C# class. 
     Matches constructor: MyWindow(Vector2d<int> size, string title)
     """
-    return cg.MyWindow(size, title)
-
+    # FIX: Safety net! Automatically construct a Vector2d<int> for C# 
+    # regardless of whether the Python vector was created as float or int.
+    cs_size = cg.Vector2d[System.Int32](int(size.x), int(size.y))
+    
+    return cg.MyWindow(cs_size, title) if title else cg.MyWindow(cs_size)
 
 
 # --- Callbacks for the Window Loop ---

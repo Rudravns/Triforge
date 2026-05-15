@@ -1,4 +1,5 @@
-from . import loader
+# pyright: reportAttributeAccessIssue=false, reportMissingImports=false
+from . import loader, constants
 import csgame as cg
 import System
 
@@ -47,7 +48,7 @@ class Color:
         return f"Color(R={self.red}, G={self.green}, B={self.blue}, A={self.alpha})"
 
 class Vector2:
-    def __init__(self, x, y, dtype=System.Single):
+    def __init__(self, x, y, dtype=constants.CSFLOAT):
         # We use System.Single (float) by default as it's most common for rendering
         self.raw = cg.Vector2d[dtype](dtype(x), dtype(y))
     
@@ -65,7 +66,7 @@ class Vector2:
         return f"Vector2(X={self.x}, Y={self.y})"
 
 class Vector3:
-    def __init__(self, x, y, z, dtype=System.Single):
+    def __init__(self, x, y, z, dtype=constants.CSFLOAT):
         self.raw = cg.Vector3d[dtype](dtype(x), dtype(y), dtype(z))
     
     @property

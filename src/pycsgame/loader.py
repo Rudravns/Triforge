@@ -4,7 +4,7 @@
 import os
 import sys
 import clr # This comes from the 'pythonnet' package
-
+# pyright: reportAttributeAccessIssue=false, reportMissingImports=false
 
 # --- Your Path Setup ---
 script_dir = os.path.dirname(os.path.abspath(__file__))
