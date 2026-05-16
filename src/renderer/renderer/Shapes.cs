@@ -33,6 +33,11 @@ namespace csgame
                    rotationZ *
                    translation;
         }
+
+        public void move_ip(Vector3 p)
+        {
+            Position += p;
+        }
     }
 
     public abstract unsafe class Drawable
@@ -178,10 +183,10 @@ namespace csgame
 
     public unsafe class Triangle : Drawable
     {
-        private List<Vector3> points;
+        private List<Vector3d<float>> points;
 
         public Triangle(
-            List<Vector3> points,
+            List<Vector3d<float>> points,
             Vector4d<float> color)
         {
             this.points = points;

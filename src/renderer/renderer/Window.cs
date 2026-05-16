@@ -110,12 +110,22 @@ namespace csgame
         public (int, int) get_size() => (Width, Height);
         public GL GetGL() => gl;
 
+
+        private double fps = 0.0;
+        private double deltaTime = 0.0;
+
+        private double fpsTimer = 0.0;
+        private int fpsFrames = 0;
+        private bool vsync_ = true;
+
         // Fixed the Vector2d to Vector2D<double> for Silk.NET compatibility
-        public MyWindow(Vector2d<int> size, string title = "My Silk.NET Window")
+        public MyWindow(Vector2d<int> size, string title = "My Silk.NET Window", bool vsync = true)
         {
             Title = title;
             Width = size.X;
             Height = size.Y;
+            vsync_ = vsync;
+
 
         }
 
@@ -175,7 +185,7 @@ namespace csgame
             var options = WindowOptions.Default;
             options.Size = new Vector2D<int>(Width, Height);
             options.Title = Title;
-
+            options.VSync = vsync_;
             window = Window.Create(options);
 
             window.Load += () =>
@@ -194,7 +204,23 @@ namespace csgame
             };
 
             // Add this to handle logic (movement, physics) separate from rendering
-            window.Update += (deltaTime) => { onUpdate?.Invoke(deltaTime); };
+            window.Update += (dt) =>
+            {
+                deltaTime = dt;
+
+                fpsFrames++;
+                fpsTimer += dt;
+
+                if (fpsTimer >= 1.0)
+                {
+                    fps = fpsFrames / fpsTimer;
+
+                    fpsFrames = 0;
+                    fpsTimer = 0.0;
+                }
+
+                onUpdate?.Invoke(dt);
+            };
 
             window.Render += OnRender;
 
@@ -209,6 +235,8 @@ namespace csgame
                 (uint)ClearBufferMask.ColorBufferBit |
                 (uint)ClearBufferMask.DepthBufferBit
             );
+
+
 
             gl.UseProgram(shader);
             // update the viewport
@@ -323,6 +351,20 @@ namespace csgame
             gl.DeleteShader(fs);
 
             return program;
+        }
+        public void SetVSync(bool enabled)
+        {
+            window.VSync = enabled;
+            vsync_ = enabled;
+        }
+        public double get_fps()
+        {
+            return fps;
+        }
+
+        public double get_dt()
+        {
+            return deltaTime;
         }
     }
 

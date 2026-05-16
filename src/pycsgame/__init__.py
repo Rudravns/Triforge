@@ -13,15 +13,22 @@ if os.path.exists(dll_dir):
         os.add_dll_directory(dll_dir)
     os.environ['PATH'] = dll_dir + os.pathsep + os.environ['PATH']
 
-# 2. Import Math Wrappers from csmath.py
+# 2. Import Constants first so they can be overridden by our wrapper classes
+from .constants import *
+
+# 3. Import Math Wrappers from csmath.py
 from .csmath import (
     Color, 
     Vector2, 
     Vector3, 
-    Rect, 
 )
 
-# 3. Import Window and Core Logic from window.py
+from .shapes import (
+    Rect,
+    Triangle
+)
+
+# 4. Import Window and Core Logic from window.py
 from .window import (
     create_window,
     add,
@@ -29,7 +36,8 @@ from .window import (
     run
 )
 
-from .constants import *
+from .image import Image, Text
+
 
 # --- Metadata ---
 __version__ = "1.0.0"
@@ -41,6 +49,7 @@ __all__ = [
     'Vector2', 
     'Vector3', 
     'Rect',
+    'Triangle',
     'create_window',
     'window',
     'add',
@@ -48,5 +57,10 @@ __all__ = [
     "CSINT",
     "CSFLOAT",
     "CSDOUBLE",
+    "CSRECT",
+    "CSTRIANGLE",
+    'Image',
+    'Text'
+
 
 ]

@@ -5,7 +5,7 @@ import System
 
 
 class Color:
-    def __init__(self, red, green, blue, alpha=255.0):
+    def __init__(self, red, green, blue, alpha=1):
         self.raw = cg.Vector4d[System.Single](
             System.Single(red), 
             System.Single(green), 
@@ -75,61 +75,3 @@ class Vector3:
 
     def __repr__(self):
         return f"Vector3(X={self.x}, Y={self.y}, Z={self.z})"
-
-class Rect:
-    def __init__(self, x, y, w, h, color = Color(255, 255, 255)):
-        # C# Rect class uses floats
-        self.raw = cg.Rect(System.Single(x), System.Single(y), System.Single(w), System.Single(h))
-        self.color_obj = color
-
-    
-    def move_ip(self, x:float = 0.0, y:float = 0.0):
-        """
-        Move the shape by (x,y) amount
-        :x: move x by this amount
-        :y: move y by this amount
-        """
-        x = float(x)
-        y = float(y)
-        self.raw.X += x
-        self.raw.Y += y
-
-
-    @property
-    def x(self): return self.raw.X
-    @x.setter
-    def x(self, v): self.raw.X = System.Single(v)
-
-    @property
-    def y(self): return self.raw.Y
-    @y.setter
-    def y(self, v): self.raw.Y = System.Single(v)
-
-    @property
-    def w(self): return self.raw.W
-    @w.setter
-    def w(self, v): self.raw.W = System.Single(v)
-
-    @property
-    def h(self): return self.raw.H
-    @h.setter
-    def h(self, v): self.raw.H = System.Single(v)
-
-    @property
-    def color(self): return self.color_obj
-    @color.setter
-    def color(self, v:Color): self.color_obj = v
-
-    def csrect(self):
-        """
-        Helper function to create a C# Rectangle drawable.
-        Usage: shape = create_rect(Rect(100, 100, 200, 150), sky_blue)
-        """
-        # Extract raw C# objects if the arguments are our Python wrappers
-        raw_rect = self.raw
-        raw_color = self.color_obj.raw if hasattr(self.color_obj, 'raw') else self.color_obj
-
-        return cg.Rectangle(raw_rect, raw_color)
-    
-    def __repr__(self) -> str:
-        return f"Rect(X={self.x}, Y={self.y}, W={self.w}, H={self.h}, Color={self.color})"
