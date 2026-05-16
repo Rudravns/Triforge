@@ -30,16 +30,29 @@ def run():
         pycsgame.Vector2(-0.5, -0.5),
         pycsgame.Vector2(0.5, 1.0)
     )
-    txt = pycsgame.Text(str(win.get_fps()))
+
+    cir = pycsgame.Circle(pycsgame.Vector2(0, 0), 0.5, sky_blue)
+
+
     # Add the shape to the window's draw list
-    win.add(txt)
-    win.add(tri)
+    win.add(cir)
     
     print("Starting render loop...")
     
     def update(dt):
-        txt.text = str(round(win.get_fps()))
-        tri.move_ip(0.01*dt)
+        if win.IsKeyPressed(pycsgame.KEY_ESCAPE):
+            win.quit()
+        
+        if win.IsKeyPressed(pycsgame.KEY_UPARROW):
+            cir.move_ip(0, 1*dt)
+        if win.IsKeyPressed(pycsgame.KEY_DOWNARROW):
+            cir.move_ip(0, -1*dt)
+        if win.IsKeyPressed(pycsgame.KEY_LEFTARROW):
+            cir.move_ip(-1*dt, 0)
+        if win.IsKeyPressed(pycsgame.KEY_RIGHTARROW):
+            cir.move_ip(1*dt, 0)
+
+
 
 
     # Start the loop

@@ -1,7 +1,8 @@
-﻿using Silk.NET.Windowing;
-using Silk.NET.OpenGL;
-using Silk.NET.Maths;
+﻿using Silk.NET.GLFW;
 using Silk.NET.Input;
+using Silk.NET.Maths;
+using Silk.NET.OpenGL;
+using Silk.NET.Windowing;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
@@ -366,6 +367,9 @@ namespace csgame
         {
             return deltaTime;
         }
+
+        public void Close()  {window?.Close(); }
+
     }
 
     public class test

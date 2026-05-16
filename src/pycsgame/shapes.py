@@ -120,3 +120,27 @@ class Triangle:
     
     def get_raw(self):
         return self.raw
+    
+class Circle:
+    def __init__(self, center:Vector2, radius:float, color:Color = Color(255, 255, 255), segments:constants.CSINT = 32) -> None:
+        self.raw = cg.Circle(center.raw, radius, color.raw, segments)
+    
+    def get_raw(self):
+        return self.raw
+
+    def move_ip(self, x:float = 0.0, y:float = 0.0):
+        self.raw.Move(x, y)
+
+    @property
+    def center(self): return self.raw.center
+    @center.setter
+    def center(self, v:Vector2): self.raw.center = v.raw
+
+    @property
+    def radius(self): return self.raw.radius
+    @radius.setter
+    def radius(self, v:float): self.raw.radius = v
+
+    
+
+pass

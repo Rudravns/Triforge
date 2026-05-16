@@ -1,7 +1,7 @@
 # pyright: reportMissingImports=false
 
 from . import loader
-from . import csmath
+from . import csmath, constants
 import csgame as cg
 import System
 from System import Action
@@ -45,12 +45,19 @@ class window:
     def add(self, obj):
         self.internal.AddDrawable(obj.get_raw())
 
+    def IsKeyPressed(self, key:constants.CSKEY) -> bool:
+        cs_key = cg.KeyboardKey(key)
+        return self.internal.IsKeyPressed(cs_key)
+
+
     def get_fps(self):
         return self.internal.get_fps()
 
     def dt(self):
         return self.internal.get_fps()/1000
 
+    def quit(self):
+        self.internal.Close()
 
 def run(win, update, load):
     load_action = Action[cg.MyWindow](load)

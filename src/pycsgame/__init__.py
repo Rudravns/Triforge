@@ -25,7 +25,8 @@ from .csmath import (
 
 from .shapes import (
     Rect,
-    Triangle
+    Triangle,
+    Circle
 )
 
 # 4. Import Window and Core Logic from window.py
@@ -57,10 +58,13 @@ __all__ = [
     "CSINT",
     "CSFLOAT",
     "CSDOUBLE",
+    "CSKEY",
+    "CSIMAGE",
     "CSRECT",
     "CSTRIANGLE",
     'Image',
-    'Text'
+    'Text',
+    'Circle'
 
 
 ]
