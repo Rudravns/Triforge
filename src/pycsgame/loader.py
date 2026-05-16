@@ -31,3 +31,9 @@ if os.path.exists(dll_dir):
         os.add_dll_directory(dll_dir)
     # Also add to PATH for older versions or specific sub-dependencies
     os.environ['PATH'] = dll_dir + os.pathsep + os.environ['PATH']
+
+if __name__ == "__main__":
+    import csgame as cg
+    test = cg.test()
+    print(test.add(1, 2))
+    print(test.write())

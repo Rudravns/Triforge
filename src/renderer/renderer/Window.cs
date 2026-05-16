@@ -187,6 +187,8 @@ namespace csgame
                 gl.Viewport(0, 0, (uint)Width, (uint)Height);
                 gl.Enable(EnableCap.Blend);
                 gl.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+                gl.Enable(EnableCap.DepthTest); // This enables the depth test
+                gl.DepthFunc(DepthFunction.Less);
                 shader = CreateShader();
                 onLoad?.Invoke(this);
             };
@@ -195,24 +197,70 @@ namespace csgame
             window.Update += (deltaTime) => { onUpdate?.Invoke(deltaTime); };
 
             window.Render += OnRender;
+
             window.Run();
         }
 
-        private void OnRender(double deltaTime)
+        private unsafe void OnRender(double deltaTime)
         {
             gl.ClearColor(0.1f, 0.1f, 0.1f, 1f);
-            gl.Clear((uint)ClearBufferMask.ColorBufferBit);
+
+            gl.Clear(
+                (uint)ClearBufferMask.ColorBufferBit |
+                (uint)ClearBufferMask.DepthBufferBit
+            );
 
             gl.UseProgram(shader);
+            // update the viewport
+            window.Resize += (size) =>
+            {
+                Width = size.X;
+                Height = size.Y;
 
-            int resLoc = gl.GetUniformLocation(shader, "uResolution");
-            gl.Uniform2(resLoc, (float)Width, (float)Height);
+                gl.Viewport(0, 0, (uint)Width, (uint)Height);
+            };
 
-            int scaleLoc = gl.GetUniformLocation(shader, "uScale");
-            gl.Uniform2(scaleLoc, 1.0f, 1.0f);
+            Matrix4x4 view =
+                Matrix4x4.CreateLookAt(
+                    new Vector3(0, 0, 3),
+                    Vector3.Zero,
+                    Vector3.UnitY
+                );
 
+            float aspect = Width / (float)Height;
 
-            // Pass 'gl' to each drawable so they can initialize themselves if needed
+            float orthoSize = 1f;
+
+            Matrix4x4 projection =
+                Matrix4x4.CreateOrthographicOffCenter(
+                    -aspect * orthoSize,
+                     aspect * orthoSize,
+                    -orthoSize,
+                     orthoSize,
+                     0.1f,
+                     100f
+                );
+
+            int viewLoc =
+                gl.GetUniformLocation(shader, "view");
+
+            int projLoc =
+                gl.GetUniformLocation(shader, "projection");
+
+            gl.UniformMatrix4(
+                viewLoc,
+                1,
+                false,
+                (float*)&view
+            );
+
+            gl.UniformMatrix4(
+                projLoc,
+                1,
+                false,
+                (float*)&projection
+            );
+
             foreach (var drawable in drawables)
             {
                 drawable.Draw(gl, shader);
@@ -224,18 +272,20 @@ namespace csgame
         {
             // Updated Vertex Shader to support UVs
             string vertex = @"#version 330 core
-            layout (location = 0) in vec2 aPos;
-            layout (location = 1) in vec2 aTexCoord; // New: Attribute for UVs
 
-            out vec2 TexCoord; // Send to fragment shader
-            uniform vec2 uResolution;
-            uniform vec2 uScale; 
+            layout (location = 0) in vec3 aPos;
+            layout (location = 1) in vec2 aTexCoord;
 
-            void main() {
-                vec2 scaledPos = aPos * uScale;
-                vec2 ndc = (scaledPos / uResolution) * 2.0 - 1.0;
-                gl_Position = vec4(ndc.x, -ndc.y, 0.0, 1.0);
-                TexCoord = aTexCoord; 
+            out vec2 TexCoord;
+
+            uniform mat4 model;
+            uniform mat4 view;
+            uniform mat4 projection;
+
+            void main()
+            {
+                gl_Position = projection * view * model * vec4(aPos, 1.0);
+                TexCoord = aTexCoord;
             }";
 
             // Updated Fragment Shader to support Texture vs Color
@@ -278,6 +328,11 @@ namespace csgame
 
     public class test
     {
+        public string write()
+        {
+            return "try 3";
+        }
+
         public int add(int a, int b)
         {
             return a + b;

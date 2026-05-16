@@ -19,15 +19,13 @@ from .csmath import (
     Vector2, 
     Vector3, 
     Rect, 
-    create_rect
 )
 
 # 3. Import Window and Core Logic from window.py
 from .window import (
     create_window,
     add,
-    on_load,
-    on_update,
+    window,
     run
 )
 
@@ -42,9 +40,9 @@ __all__ = [
     'Color', 
     'Vector2', 
     'Vector3', 
-    'Rect', 
-    'create_rect',
+    'Rect',
     'create_window',
+    'window',
     'add',
     'run',
     "CSINT",

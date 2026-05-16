@@ -1,33 +1,91 @@
 ﻿using System.Collections.Generic;
 using Silk.NET.OpenGL;
-using Silk.NET.Maths;
+using System.Numerics;
 
 namespace csgame
 {
+    public class Transform
+    {
+        public Vector3 Position = Vector3.Zero;
+        public Vector3 Rotation = Vector3.Zero;
+        public Vector3 Scale = Vector3.One;
+
+        public Matrix4x4 GetModelMatrix()
+        {
+            Matrix4x4 translation =
+                Matrix4x4.CreateTranslation(Position);
+
+            Matrix4x4 rotationX =
+                Matrix4x4.CreateRotationX(Rotation.X);
+
+            Matrix4x4 rotationY =
+                Matrix4x4.CreateRotationY(Rotation.Y);
+
+            Matrix4x4 rotationZ =
+                Matrix4x4.CreateRotationZ(Rotation.Z);
+
+            Matrix4x4 scale =
+                Matrix4x4.CreateScale(Scale);
+
+            return scale *
+                   rotationX *
+                   rotationY *
+                   rotationZ *
+                   translation;
+        }
+    }
+
     public abstract unsafe class Drawable
     {
         protected uint vao;
         protected uint vbo;
+
         protected bool initialized = false;
+
         protected float r, g, b, a;
 
-        // Abstract methods: Children MUST implement these
+        public Transform Transform = new Transform();
+
         public abstract void Draw(GL gl, uint shader);
+
         protected abstract void UpdateBuffer(GL gl);
-
-        // Virtual method: Children CAN use this or override it
-
 
         public virtual void Initialize(GL gl)
         {
             vao = gl.GenVertexArray();
             vbo = gl.GenBuffer();
+
             gl.BindVertexArray(vao);
             gl.BindBuffer(BufferTargetARB.ArrayBuffer, vbo);
-            // Attributes are usually the same for simple 2D shapes
-            gl.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), (void*)0);
+
+            // NOW USING VEC3
+            gl.VertexAttribPointer(
+                0,
+                3,
+                VertexAttribPointerType.Float,
+                false,
+                3 * sizeof(float),
+                (void*)0
+            );
+
             gl.EnableVertexAttribArray(0);
+
             initialized = true;
+        }
+
+        protected void ApplyModelMatrix(GL gl, uint shader)
+        {
+            Matrix4x4 model = Transform.GetModelMatrix();
+
+            int modelLoc =
+                gl.GetUniformLocation(shader, "model");
+
+            gl.UniformMatrix4(
+                modelLoc,
+                1,
+                false,
+                (float*)&model
+            );
         }
     }
 
@@ -37,33 +95,40 @@ namespace csgame
 
         public Rectangle(Rect rect, Vector4d<float> color)
         {
-            this.rectData = rect;
-            this.r = color.R / 255;
-            this.g = color.G / 255f;
-            this.b = color.B / 255f;
-            this.a = color.A;
+            rectData = rect;
+
+            r = color.R / 255f;
+            g = color.G / 255f;
+            b = color.B / 255f;
+            a = color.A;
         }
 
         public override void Draw(GL gl, uint shader)
         {
-            if (!initialized) Initialize(gl);
+            if (!initialized)
+                Initialize(gl);
 
-            int useTexLoc = gl.GetUniformLocation(shader, "uUseTexture");
+            int useTexLoc =
+                gl.GetUniformLocation(shader, "uUseTexture");
+
             gl.Uniform1(useTexLoc, 0);
+
+            ApplyModelMatrix(gl, shader);
 
             UpdateBuffer(gl);
 
             gl.BindVertexArray(vao);
 
-            // Reset layout for solid shapes
-            gl.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), (void*)0);
-            gl.EnableVertexAttribArray(0);
-            gl.DisableVertexAttribArray(1);
+            int colorLoc =
+                gl.GetUniformLocation(shader, "uColor");
 
-            int colorLoc = gl.GetUniformLocation(shader, "uColor");
             gl.Uniform4(colorLoc, r, g, b, a);
 
-            gl.DrawArrays(PrimitiveType.Triangles, 0, 6);
+            gl.DrawArrays(
+                PrimitiveType.Triangles,
+                0,
+                6
+            );
         }
 
         protected override void UpdateBuffer(GL gl)
@@ -73,84 +138,111 @@ namespace csgame
             float w = rectData.W;
             float h = rectData.H;
 
+            float z = 0f;
+
+            // 2 TRIANGLES = RECTANGLE
             float[] vertices =
             {
-                x, y, x + w, y, x, y + h, // Tri 1
-                x + w, y, x + w, y + h, x, y + h // Tri 2
+                // Triangle 1
+                x,     y,     z,
+                x+w,   y,     z,
+                x,     y+h,   z,
+
+                // Triangle 2
+                x+w,   y,     z,
+                x+w,   y+h,   z,
+                x,     y+h,   z
             };
 
-            gl.BindBuffer(BufferTargetARB.ArrayBuffer, vbo);
+            gl.BindBuffer(
+                BufferTargetARB.ArrayBuffer,
+                vbo
+            );
+
             fixed (float* v = vertices)
             {
-                gl.BufferData(BufferTargetARB.ArrayBuffer, (uint)(vertices.Length * sizeof(float)), v,
-                    BufferUsageARB.DynamicDraw);
+                gl.BufferData(
+                    BufferTargetARB.ArrayBuffer,
+                    (uint)(vertices.Length * sizeof(float)),
+                    v,
+                    BufferUsageARB.DynamicDraw
+                );
             }
         }
 
-        public void Move(float dx, float dy) => rectData.Move_ip(dx, dy);
+        public void Move(float dx, float dy)
+        {
+            rectData.Move_ip(dx, dy);
+        }
     }
-
 
     public unsafe class Triangle : Drawable
     {
-        private List<Vector2d<int>> points;
+        private List<Vector3> points;
 
-        public Triangle(List<Vector2d<int>> points, Vector4d<float> color)
+        public Triangle(
+            List<Vector3> points,
+            Vector4d<float> color)
         {
-
             this.points = points;
-            this.r = color.R / 255f;
-            this.g = color.G / 255f;
-            this.b = color.B / 255f;
-            this.a = color.A;
+
+            r = color.R / 255f;
+            g = color.G / 255f;
+            b = color.B / 255f;
+            a = color.A;
         }
 
         protected override void UpdateBuffer(GL gl)
         {
             float[] vertices =
             {
-                (float)points[0].X, (float)points[0].Y,
-                (float)points[1].X, (float)points[1].Y,
-                (float)points[2].X, (float)points[2].Y
+                points[0].X, points[0].Y, points[0].Z,
+                points[1].X, points[1].Y, points[1].Z,
+                points[2].X, points[2].Y, points[2].Z
             };
 
-            gl.BindBuffer(BufferTargetARB.ArrayBuffer, vbo);
+            gl.BindBuffer(
+                BufferTargetARB.ArrayBuffer,
+                vbo
+            );
 
             fixed (float* v = vertices)
             {
-                uint size = (uint)(vertices.Length * sizeof(float));
-
-                // Use BufferData instead of BufferSubData to ensure memory is allocated.
-                // If you only want to allocate once, you can keep using BufferData 
-                // with DynamicDraw; it is very fast for 3 vertices.
-                gl.BufferData(BufferTargetARB.ArrayBuffer, size, v, BufferUsageARB.DynamicDraw);
+                gl.BufferData(
+                    BufferTargetARB.ArrayBuffer,
+                    (uint)(vertices.Length * sizeof(float)),
+                    v,
+                    BufferUsageARB.DynamicDraw
+                );
             }
         }
 
         public override void Draw(GL gl, uint shader)
         {
-            if (!initialized) Initialize(gl);
+            if (!initialized)
+                Initialize(gl);
 
-            // 1. Tell the shader NOT to use texture logic
-            int useTexLoc = gl.GetUniformLocation(shader, "uUseTexture");
+            int useTexLoc =
+                gl.GetUniformLocation(shader, "uUseTexture");
+
             gl.Uniform1(useTexLoc, 0);
+
+            ApplyModelMatrix(gl, shader);
 
             UpdateBuffer(gl);
 
             gl.BindVertexArray(vao);
 
-            // 2. FORCE the layout to 2 floats (Stride: 2 * sizeof(float))
-            // This fixes the crash caused by the Image class changing the stride to 4.
-            gl.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), (void*)0);
-            gl.EnableVertexAttribArray(0);
-            gl.DisableVertexAttribArray(1); // Hide UVs
+            int colorLoc =
+                gl.GetUniformLocation(shader, "uColor");
 
-            int colorLoc = gl.GetUniformLocation(shader, "uColor");
             gl.Uniform4(colorLoc, r, g, b, a);
 
-            gl.DrawArrays(PrimitiveType.Triangles, 0, 3);
+            gl.DrawArrays(
+                PrimitiveType.Triangles,
+                0,
+                3
+            );
         }
-
-
     }
 }

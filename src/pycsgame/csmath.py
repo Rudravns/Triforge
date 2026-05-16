@@ -3,17 +3,6 @@ from . import loader, constants
 import csgame as cg
 import System
 
-def create_rect(rect_obj, color_obj):
-    """
-    Helper function to create a C# Rectangle drawable.
-    Usage: shape = create_rect(Rect(100, 100, 200, 150), sky_blue)
-    """
-    # Extract raw C# objects if the arguments are our Python wrappers
-    raw_rect = rect_obj.raw if hasattr(rect_obj, 'raw') else rect_obj
-    raw_color = color_obj.raw if hasattr(color_obj, 'raw') else color_obj
-    
-    return cg.Rectangle(raw_rect, raw_color)
-
 
 class Color:
     def __init__(self, red, green, blue, alpha=255.0):
@@ -88,10 +77,24 @@ class Vector3:
         return f"Vector3(X={self.x}, Y={self.y}, Z={self.z})"
 
 class Rect:
-    def __init__(self, x, y, w, h):
+    def __init__(self, x, y, w, h, color = Color(255, 255, 255)):
         # C# Rect class uses floats
         self.raw = cg.Rect(System.Single(x), System.Single(y), System.Single(w), System.Single(h))
+        self.color_obj = color
+
     
+    def move_ip(self, x:float = 0.0, y:float = 0.0):
+        """
+        Move the shape by (x,y) amount
+        :x: move x by this amount
+        :y: move y by this amount
+        """
+        x = float(x)
+        y = float(y)
+        self.raw.X += x
+        self.raw.Y += y
+
+
     @property
     def x(self): return self.raw.X
     @x.setter
@@ -112,5 +115,21 @@ class Rect:
     @h.setter
     def h(self, v): self.raw.H = System.Single(v)
 
-    def __repr__(self):
-        return f"Rect(X={self.x}, Y={self.y}, W={self.w}, H={self.h})"
+    @property
+    def color(self): return self.color_obj
+    @color.setter
+    def color(self, v:Color): self.color_obj = v
+
+    def csrect(self):
+        """
+        Helper function to create a C# Rectangle drawable.
+        Usage: shape = create_rect(Rect(100, 100, 200, 150), sky_blue)
+        """
+        # Extract raw C# objects if the arguments are our Python wrappers
+        raw_rect = self.raw
+        raw_color = self.color_obj.raw if hasattr(self.color_obj, 'raw') else self.color_obj
+
+        return cg.Rectangle(raw_rect, raw_color)
+    
+    def __repr__(self) -> str:
+        return f"Rect(X={self.x}, Y={self.y}, W={self.w}, H={self.h}, Color={self.color})"

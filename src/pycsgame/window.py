@@ -29,26 +29,25 @@ def create_window(size: csmath.Vector2, title: str|None = None):
     # FIX: Safety net! Automatically construct a Vector2d<int> for C# 
     # regardless of whether the Python vector was created as float or int.
     cs_size = cg.Vector2d[System.Int32](int(size.x), int(size.y))
-    
     return cg.MyWindow(cs_size, title) if title else cg.MyWindow(cs_size)
+  
 
 
-# --- Callbacks for the Window Loop ---
 
-def on_load(window):
-    """
-    This is called when the window starts up.
-    FIXED: Removed 'window.Title' access which caused the crash.
-    """
-    print("Window loaded successfully!")
+class window:
+    def __init__(self, size: csmath.Vector2, title: str | None = None):
+        self.internal = create_window(size, title)
 
-def on_update(delta_time):
-    """
-    This is called every frame.
-    """
-    pass
 
-def run(win):
-    load_action = Action[cg.MyWindow](on_load)
-    update_action = Action[System.Double](on_update)
+    def run(self, update=lambda delta_time: None, load=lambda window: print("Window loaded successfully!")):
+        run(self.internal, update, load)
+
+    def add(self, obj):
+        self.internal.AddDrawable(obj.csrect())
+
+
+
+def run(win, update, load):
+    load_action = Action[cg.MyWindow](load)
+    update_action = Action[System.Double](update)
     win.Run(load_action, update_action)

@@ -14,12 +14,14 @@ using GDRectangle = System.Drawing.Rectangle;
 
 namespace csgame
 {
+    
     public unsafe class Image : Drawable
     {
         protected uint _texture;
         protected Vector2d<float> _pos; // Using your custom Vector2d
         protected Vector2d<float> _size;
         protected string _path;
+        public Transform Transform = new Transform();
 
         public Image(string path, Vector2d<float> pos, Vector2d<float> size, float alpha = 1f)
         {
@@ -89,15 +91,15 @@ namespace csgame
             float y = _pos.Y;
             float w = _size.X;
             float h = _size.Y;
-
+            float z = 1f;
             float[] vertices =
             {
-                x, y, 0f, 0f,
-                x + w, y, 1f, 0f,
-                x, y + h, 0f, 1f,
-                x + w, y, 1f, 0f,
-                x + w, y + h, 1f, 1f,
-                x, y + h, 0f, 1f
+                x, y, z, 0f, 0f,
+                x + w, y, z, 1f, 0f,
+                x, y + h, z, 0f, 1f,
+                x + w, y, z, 1f, 0f,
+                x + w, y + h, z, 1f, 1f,
+                x, y + h, z, 0f, 1f
             };
 
             gl.BindBuffer(BufferTargetARB.ArrayBuffer, vbo);
@@ -112,9 +114,9 @@ namespace csgame
         {
             base.Initialize(gl);
             gl.BindVertexArray(vao);
-            gl.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float), (void*)0);
+            gl.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 5 * sizeof(float), (void*)0);
             gl.EnableVertexAttribArray(0);
-            gl.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, 4 * sizeof(float),
+            gl.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, 5 * sizeof(float),
                 (void*)(2 * sizeof(float)));
             gl.EnableVertexAttribArray(1);
         }
