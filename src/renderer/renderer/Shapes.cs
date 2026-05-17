@@ -11,7 +11,7 @@ namespace csgame
     {
         protected uint vao;
         protected uint vbo;
-
+        public bool ScreenSpace = false;
         protected bool initialized = false;
 
         protected float r, g, b, a;
@@ -74,18 +74,36 @@ namespace csgame
             initialized = true;
         }
 
-        protected void ApplyModelMatrix(GL gl, uint shader)
+        protected void ApplyModelMatrix(
+            GL gl,
+            uint shader
+        )
         {
-            Matrix4x4 model = Transform.GetModelMatrix();
+            Matrix4x4 model =
+                Transform.GetModelMatrix();
 
             int modelLoc =
-                gl.GetUniformLocation(shader, "model");
+                gl.GetUniformLocation(
+                    shader,
+                    "model"
+                );
 
             gl.UniformMatrix4(
                 modelLoc,
                 1,
                 false,
                 (float*)&model
+            );
+
+            int screenSpaceLoc =
+                gl.GetUniformLocation(
+                    shader,
+                    "uScreenSpace"
+                );
+
+            gl.Uniform1(
+                screenSpaceLoc,
+                ScreenSpace ? 1 : 0
             );
         }
     }

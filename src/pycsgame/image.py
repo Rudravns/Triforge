@@ -52,7 +52,7 @@ class Text:
     @property
     def text(self): return self.raw._text
     @text.setter
-    def text(self, v): self.raw.set_text(v)
+    def text(self, v): self.raw.set_text(str(v))
 
     @property
     def bold(self): return self.raw._bold
@@ -74,7 +74,13 @@ class Text:
     @size.setter
     def size(self, v:int): self.raw.set_size(v)
 
+    @property
+    def isScreenSpace(self): return self.raw.ScreenSpace 
+    @isScreenSpace.setter
+    def isScreenSpace(self, v:bool): self.raw.ScreenSpace = v
 
+
+    
 
     def move_ip(self, x:float = 0.0, y:float = 0.0):
         self.pos.x += x
