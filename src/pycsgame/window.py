@@ -85,7 +85,10 @@ class Camera:
 class window:
     def __init__(self, size: csmath.Vector2, title: str ="pycsgame window", vsync:bool = True):
         self.internal = create_window(size, title, vsync)
-
+        self.down = []
+        [self.down.append(False) for _ in constants.KeyboardKey]
+        
+        self.mouse = [False, False, False]
 
     def run(self, update=lambda dt: None, load=lambda window: print("Window loaded successfully!")):
         load_action = Action[cg.MyWindow](load)
@@ -102,6 +105,28 @@ class window:
         cs_key = cg.KeyboardKey(key.value)
         return self.internal.IsKeyPressed(cs_key)
 
+    def isKeyClicked(self, key:constants.KeyboardKey) -> bool:
+        if self.IsKeyPressed(key):
+            if not self.down[key.value]:
+                self.down[key.value] = True
+                return True
+        else:
+            self.down[key.value] = False
+        return False    
+    
+    def isMousedown(self, button: constants.MouseButton) -> bool:
+        return self.internal.isMousedown()[button.value]
+    
+    def isMouseClicked(self, button:constants.MouseButton) -> bool:
+        if self.isMousedown(button):
+            if not self.mouse[button.value]:
+                self.mouse[button.value] = True
+                return True
+        else:
+            self.mouse[button.value] = False
+        return False
+
+
     def set_camera(self, cam: Camera):
         self.internal.Camera = cam.get_raw()
         
@@ -113,3 +138,12 @@ class window:
 
     def quit(self):
         self.internal.Close()
+
+    @property
+    def mouse_pos(self):
+        return self.internal.Mouse_pos()
+    @mouse_pos.setter
+    def mouse_pos(self, v: csmath.Vector2):
+        self.internal.SetMousePos(v.raw)
+
+    

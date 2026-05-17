@@ -25,6 +25,12 @@ CSVECTOR4D: TypeAlias = cg.Vector4d[System.Single]
 CSRECT: TypeAlias = cg.Rectangle
 CSTRIANGLE: TypeAlias = cg.Triangle
 
+#mouse
+class MouseButton(Enum):
+    LEFT = 0
+    MIDDLE = 2
+    RIGHT = 1
+
 #rect faces
 class CubeFace(Enum):
     FRONT = 0

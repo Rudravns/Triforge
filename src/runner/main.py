@@ -2,10 +2,6 @@ import os
 import sys
 from pathlib import Path
 
-from flask.cli import F
-
-
-
 # Add src directory to path so csgame can be imported
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -22,7 +18,7 @@ def run():
     window_size = pycsgame.Vector2(800, 600, pycsgame.CSINT)
     
     # Create the window
-    win = pycsgame.window(window_size, "test", False)
+    win = pycsgame.window(window_size, "test", True)
     cam = pycsgame.Camera()
     win.set_camera(cam)
     
@@ -36,7 +32,9 @@ def run():
         pycsgame.Vector2(1.0, 1.0)
     )
     text = pycsgame.Text("Hello World!", pycsgame.Vector2(-0.9, -0.9), 32, sky_blue)
-    fps = pycsgame.Text(f"FPS: 0", pycsgame.Vector2(0.9, -0.9), 32, sky_blue)
+    fps = pycsgame.Text(f"FPS: 0", pycsgame.Vector2(-0.9, 0.9), 32, sky_blue)
+    txt2 = pycsgame.Text("Hello World!", pycsgame.Vector2(-0.9, -0.9), 32, sky_blue)
+    txt2.isScreenSpace = True
     cir = pycsgame.Circle(pycsgame.Vector2(3, 0), 0.5, sky_blue)
     rect3d = pycsgame.Rect3d(pycsgame.Vector3(0, 0, 0), pycsgame.Vector3(1, 1, 1), sky_blue)
     fps.isScreenSpace = True
@@ -48,6 +46,8 @@ def run():
     win.add(img)
     win.add(cir)
     win.add(fps)
+    win.add(txt2)
+    
     rect3d.assign_texture("Images/cs.png", pycsgame.CubeFace.FRONT)
     rect3d.assign_texture("Images/cs.png", pycsgame.CubeFace.BACK)
     rect3d.assign_texture("Images/cs.png", pycsgame.CubeFace.LEFT)
@@ -59,7 +59,7 @@ def run():
         nonlocal mouse
 
         speed = 2 * dt
-        fps.text = round(win.get_fps())
+        fps.text = f"FPS: {round(win.get_fps())}"
 
         if win.IsKeyPressed(pycsgame.KeyboardKey.K_ESCAPE):
             win.quit()
@@ -68,7 +68,8 @@ def run():
         
         if mouse: win.update_camera(0.002)
 
-        if win.IsKeyPressed(pycsgame.KeyboardKey.K_P):
+        down = win.isKeyClicked(pycsgame.KeyboardKey.K_P)
+        if down:
             mouse = not mouse 
 
 
@@ -94,8 +95,10 @@ def run():
         if win.IsKeyPressed(pycsgame.KeyboardKey.K_SHIFT):
             cam.MoveDown(speed)
         
-        text.text = (f"position: {cam.position}, camera: {cam.rotation}")
-
+        is_lmb = win.isMousedown(pycsgame.MouseButton.LEFT)
+        is_lmb_clicked = win.isMouseClicked(pycsgame.MouseButton.LEFT)
+        text.text = f"pos: {cam.position}, rot: {cam.rotation}, p_down: {down}, LMB: {is_lmb}, Click: {is_lmb_clicked}"
+        txt2.text = f"mouse_pos: {win.mouse_pos}"
 
 
 

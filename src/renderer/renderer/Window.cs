@@ -145,6 +145,41 @@ namespace csgame
             return false;
         }
 
+        public bool[] isMousedown()
+        {
+            if (primaryMouse != null)
+            {
+                return new bool[]
+                {
+            primaryMouse.IsButtonPressed(Silk.NET.Input.MouseButton.Left),
+            primaryMouse.IsButtonPressed(Silk.NET.Input.MouseButton.Middle),
+            primaryMouse.IsButtonPressed(Silk.NET.Input.MouseButton.Right)
+                };
+            }
+
+            return new bool[] { false, false, false };
+        }
+
+        public (float x, float y) Mouse_pos()
+        {
+            if (primaryMouse != null)
+            {
+                return (primaryMouse.Position.X, primaryMouse.Position.Y);
+            }
+            return (0f, 0f);
+        }
+
+        public void SetMousePos(Vector2d<float> position)
+        {
+            if (primaryMouse != null)
+            {
+                primaryMouse.Position = new Vector2(position.X, position.Y);
+            }
+        }
+
+
+
+
 
         private static readonly Dictionary<KeyboardKey, Key> KeyMap = new Dictionary<KeyboardKey, Key>
         {
