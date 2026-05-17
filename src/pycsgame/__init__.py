@@ -34,10 +34,12 @@ from .window import (
     create_window,
     add,
     window,
-    run
+    Camera
 )
 
 from .image import Image, Text
+
+from .three_d_shapes import Rect3d
 
 
 # --- Metadata ---
@@ -54,7 +56,6 @@ __all__ = [
     'create_window',
     'window',
     'add',
-    'run',
     "CSINT",
     "CSFLOAT",
     "CSDOUBLE",
@@ -64,7 +65,10 @@ __all__ = [
     "CSTRIANGLE",
     'Image',
     'Text',
-    'Circle'
+    'Circle',
+    'Rect3d',
+    'Camera',
+
 
 
 ]

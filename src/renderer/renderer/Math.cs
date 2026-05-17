@@ -63,7 +63,7 @@ namespace csgame
         public T Y { get; set; }
         public T Z { get; set; }
 
-        // 1. Generic Constructor (The <T> constructor)
+        // Constructor
         public Vector3d(T x, T y, T z)
         {
             X = x;
@@ -71,48 +71,139 @@ namespace csgame
             Z = z;
         }
 
-        // 2. Copy Constructor
+        // Copy constructor
         public Vector3d(Vector3d<T> other)
         {
-            this.X = other.X;
-            this.Y = other.Y;
-            this.Z = other.Z;
+            X = other.X;
+            Y = other.Y;
+            Z = other.Z;
         }
 
-        // 3. Vector + Vector Addition
+        // Vector + Vector
         public static Vector3d<T> operator +(Vector3d<T> a, Vector3d<T> b)
         {
-            return new Vector3d<T>((dynamic)a.X + (dynamic)b.X , (dynamic)a.Y + (dynamic)b.Y, (dynamic)a.Z + (dynamic)b.Z);
+            return new Vector3d<T>(
+                (dynamic)a.X + b.X,
+                (dynamic)a.Y + b.Y,
+                (dynamic)a.Z + b.Z
+            );
         }
 
-        // 4. Vector + Scalar (Number) Addition
-        public static Vector3d<T> operator + (Vector3d<T> a, T scalar)
+        // Vector - Vector
+        public static Vector3d<T> operator -(Vector3d<T> a, Vector3d<T> b)
         {
-            return new Vector3d<T>((dynamic)a.X + (dynamic)scalar, (dynamic)a.Y + (dynamic)scalar, (dynamic)a.Z + (dynamic)scalar);
+            return new Vector3d<T>(
+                (dynamic)a.X - b.X,
+                (dynamic)a.Y - b.Y,
+                (dynamic)a.Z - b.Z
+            );
         }
 
-        // 5. Vector * Scalar Multiplication
+        // Vector * scalar
         public static Vector3d<T> operator *(Vector3d<T> a, T scalar)
         {
-            return new Vector3d<T>((dynamic)a.X * (dynamic)scalar, (dynamic)a.Y * (dynamic)scalar, (dynamic)a.Z * (dynamic)scalar);
+            return new Vector3d<T>(
+                (dynamic)a.X * scalar,
+                (dynamic)a.Y * scalar,
+                (dynamic)a.Z * scalar
+            );
         }
 
-        // Your ChangeBy Method using dynamic to support any numeric T
+        // Vector / scalar
+        public static Vector3d<T> operator /(Vector3d<T> a, T scalar)
+        {
+            return new Vector3d<T>(
+                (dynamic)a.X / scalar,
+                (dynamic)a.Y / scalar,
+                (dynamic)a.Z / scalar
+            );
+        }
+
+        // Unary negative
+        public static Vector3d<T> operator -(Vector3d<T> a)
+        {
+            return new Vector3d<T>(
+                -(dynamic)a.X,
+                -(dynamic)a.Y,
+                -(dynamic)a.Z
+            );
+        }
+
         public void ChangeBy(T dx, T dy, T dz)
         {
             X = (dynamic)X + dx;
             Y = (dynamic)Y + dy;
-            Z = (dynamic)Y + dz;
+            Z = (dynamic)Z + dz;
         }
 
-        //dot product 
+        // Dot product
         public T Dot(Vector3d<T> other)
         {
-            return (dynamic)this.X * other.X + (dynamic)this.Y * other.Y + (dynamic)this.Z * other.Z;
+            return
+                (dynamic)X * other.X +
+                (dynamic)Y * other.Y +
+                (dynamic)Z * other.Z;
         }
 
-        // Overriding ToString for easy debugging
-        public override string ToString() => $"({X}, {Y}, {Z})";
+        // Cross product
+        public Vector3d<T> Cross(Vector3d<T> other)
+        {
+            T crossX =
+                (dynamic)Y * other.Z -
+                (dynamic)Z * other.Y;
+
+            T crossY =
+                (dynamic)Z * other.X -
+                (dynamic)X * other.Z;
+
+            T crossZ =
+                (dynamic)X * other.Y -
+                (dynamic)Y * other.X;
+
+            return new Vector3d<T>(
+                crossX,
+                crossY,
+                crossZ
+            );
+        }
+
+        public float magnitude()
+        {
+            float xf = Convert.ToSingle(X);
+            float yf = Convert.ToSingle(Y);
+            float zf = Convert.ToSingle(Z);
+
+            return (float)Math.Sqrt(
+                xf * xf +
+                yf * yf +
+                zf * zf
+            );
+        }
+
+        public Vector3d<T> normalize()
+        {
+            float mag = magnitude();
+
+            if (mag == 0)
+            {
+                return new Vector3d<T>(
+                    X,
+                    Y,
+                    Z
+                );
+            }
+
+            return new Vector3d<T>(
+                (T)((dynamic)X / mag),
+                (T)((dynamic)Y / mag),
+                (T)((dynamic)Z / mag)
+            );
+        }
+
+        public override string ToString()
+        {
+            return $"({X}, {Y}, {Z})";
+        }
     }
 
     public class Vector4d<T>

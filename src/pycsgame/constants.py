@@ -5,12 +5,16 @@ import csgame as cg
 from typing import *  # pyright: ignore[reportWildcardImportFromLibrary]
 
 #Value Types
+
 CSINT: TypeAlias = System.Int32
 CSFLOAT: TypeAlias = System.Single
 CSDOUBLE: TypeAlias = System.Double
 CSLIST: TypeAlias = System.Collections.Generic.List[System.Object]
 CSKEY: TypeAlias = System.Int32
 CSIMAGE: TypeAlias = cg.Image
+
+CSNUM: TypeAlias = CSINT | CSDOUBLE | CSFLOAT | float | int
+
 
 #math
 CSVECTOR3D: TypeAlias = cg.Vector3d[System.Single]

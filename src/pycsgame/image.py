@@ -2,7 +2,7 @@
 from . import loader
 import csgame as cg
 import System
-from .csmath import *
+from .csmath import * # pyright: ignore[reportAssignmentType]
 from pathlib import Path
 import os 
 

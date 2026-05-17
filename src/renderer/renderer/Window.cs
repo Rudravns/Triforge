@@ -96,10 +96,14 @@ namespace csgame
     public class MyWindow
     {
         private IWindow window;
+        public Camera Camera = new Camera(); // the camera
         private GL gl;
         private IInputContext input;
         private IKeyboard primaryKeyboard; // Store the keyboard here
-
+        private IMouse primaryMouse;
+        private Vector2 lastMousePos;
+        private bool firstMouseMove = true;
+       
         private string Title;
         private int Width;
         private int Height;
@@ -194,12 +198,16 @@ namespace csgame
                 gl = GL.GetApi(window);
                 input = window.CreateInput();
                 primaryKeyboard = input.Keyboards.Count > 0 ? input.Keyboards[0] : null;
+                primaryMouse = input.Mice.Count > 0 ? input.Mice[0] : null;
 
                 gl.Viewport(0, 0, (uint)Width, (uint)Height);
                 gl.Enable(EnableCap.Blend);
                 gl.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
                 gl.Enable(EnableCap.DepthTest); // This enables the depth test
                 gl.DepthFunc(DepthFunction.Less);
+                gl.Enable(EnableCap.CullFace);
+                gl.CullFace(TriangleFace.Back);
+                gl.FrontFace(FrontFaceDirection.Ccw);
                 shader = CreateShader();
                 onLoad?.Invoke(this);
             };
@@ -249,25 +257,16 @@ namespace csgame
                 gl.Viewport(0, 0, (uint)Width, (uint)Height);
             };
 
-            Matrix4x4 view =
-                Matrix4x4.CreateLookAt(
-                    new Vector3(0, 0, 3),
-                    Vector3.Zero,
-                    Vector3.UnitY
-                );
+            Matrix4x4 view = Camera.GetViewMatrix();
 
             float aspect = Width / (float)Height;
 
-            float orthoSize = 1f;
-
             Matrix4x4 projection =
-                Matrix4x4.CreateOrthographicOffCenter(
-                    -aspect * orthoSize,
-                     aspect * orthoSize,
-                    -orthoSize,
-                     orthoSize,
-                     0.1f,
-                     100f
+                Matrix4x4.CreatePerspectiveFieldOfView(
+                    (float)Math.PI / 4f,
+                    aspect,
+                    0.1f,
+                    100f
                 );
 
             int viewLoc =
@@ -369,6 +368,68 @@ namespace csgame
         }
 
         public void Close()  {window?.Close(); }
+
+        public void LockAndHideMouse(bool lockMouse, bool hideMouse)
+        {
+            if (primaryMouse == null) return;
+
+            if (lockMouse && hideMouse)
+            {
+                primaryMouse.Cursor.CursorMode = CursorMode.Disabled;
+            }
+            else if (lockMouse && !hideMouse)
+            {
+                // Adjust this if your engine uses a different enum for locked-but-visible
+                primaryMouse.Cursor.CursorMode = CursorMode.Disabled;
+            }
+            else if (!lockMouse && hideMouse)
+            {
+                // Adjust this if your engine uses a different enum for hidden-but-unlocked
+                primaryMouse.Cursor.CursorMode = CursorMode.Hidden;
+            }
+            else
+            {
+                primaryMouse.Cursor.CursorMode = CursorMode.Normal;
+            }
+        }
+
+        public void update_camera(
+            float sensitivity,
+            bool lock_mouse = true,
+            bool hide_mouse = true
+        )
+        {
+            if (primaryMouse == null)
+                return;
+            LockAndHideMouse(lock_mouse, hide_mouse);
+
+            Vector2 mousePos = primaryMouse.Position;
+
+            if (firstMouseMove)
+            {
+                lastMousePos = mousePos;
+                firstMouseMove = false;
+            }
+
+            float deltaX = mousePos.X - lastMousePos.X;
+            float deltaY = mousePos.Y - lastMousePos.Y;
+
+            lastMousePos = mousePos;
+
+            deltaX *= sensitivity;
+            deltaY *= sensitivity;
+
+            Camera.Rotation.Y -= deltaX;
+            Camera.Rotation.X -= deltaY;
+
+            float limit = (float)Math.PI / 2f - 0.01f;
+
+            if (Camera.Rotation.X > limit)
+                Camera.Rotation.X = limit;
+
+            if (Camera.Rotation.X < -limit)
+                Camera.Rotation.X = -limit;
+        }
 
     }
 

@@ -21,36 +21,74 @@ def run():
     
     # Create the window
     win = pycsgame.window(window_size, "test", True)
+    cam = pycsgame.Camera()
+    win.set_camera(cam)
     
+
     # Create a rectangle
-    shape = pycsgame.Rect(-0.5, -0.5, 1.0, 1.0, sky_blue)
-    tri = pycsgame.Triangle([pycsgame.Vector3(0, 0, 0), pycsgame.Vector3(1, 0, 0), pycsgame.Vector3(0, 1, 0)])
+    shape = pycsgame.Rect(5, -0.5, 1.0, 1.0, sky_blue)
+    tri = pycsgame.Triangle([pycsgame.Vector3(0, 5, 0), pycsgame.Vector3(1, 5, 0), pycsgame.Vector3(0, 6, 0)])
     img = pycsgame.Image(
         "Images/cs.png",
-        pycsgame.Vector2(-0.5, -0.5),
-        pycsgame.Vector2(0.5, 1.0)
+        pycsgame.Vector2(-2.5, -2.5),
+        pycsgame.Vector2(1.0, 1.0)
     )
+    text = pycsgame.Text("Hello World!", pycsgame.Vector2(-0.9, -0.9), 32, sky_blue)
 
-    cir = pycsgame.Circle(pycsgame.Vector2(0, 0), 0.5, sky_blue)
-
+    cir = pycsgame.Circle(pycsgame.Vector2(3, 0), 0.5, sky_blue)
+    rect3d = pycsgame.Rect3d(pycsgame.Vector3(0, 0, 0), pycsgame.Vector3(1, 1, 1), sky_blue)
 
     # Add the shape to the window's draw list
+    win.add(rect3d)
+    win.add(text)
+    win.add(shape)
+    win.add(tri)
+    win.add(img)
     win.add(cir)
-    
+
+
     print("Starting render loop...")
-    
+    mouse = False
     def update(dt):
+        nonlocal mouse
+
+        speed = 2 * dt
+        
         if win.IsKeyPressed(pycsgame.KEY_ESCAPE):
             win.quit()
+
         
-        if win.IsKeyPressed(pycsgame.KEY_UPARROW):
-            cir.move_ip(0, 1*dt)
-        if win.IsKeyPressed(pycsgame.KEY_DOWNARROW):
-            cir.move_ip(0, -1*dt)
-        if win.IsKeyPressed(pycsgame.KEY_LEFTARROW):
-            cir.move_ip(-1*dt, 0)
-        if win.IsKeyPressed(pycsgame.KEY_RIGHTARROW):
-            cir.move_ip(1*dt, 0)
+        
+        if mouse: win.update_camera(0.002)
+
+        if win.IsKeyPressed(pycsgame.KEY_P):
+            mouse = not mouse 
+
+
+        
+
+        if win.IsKeyPressed(pycsgame.KEY_W):
+            cam.MoveForwards(speed)
+
+        if win.IsKeyPressed(pycsgame.KEY_S):
+            cam.MoveBackwards(speed)
+
+
+        if win.IsKeyPressed(pycsgame.KEY_A):
+            cam.MoveLeft(speed)
+
+
+        if win.IsKeyPressed(pycsgame.KEY_D):
+            cam.MoveRight(speed)
+
+        if win.IsKeyPressed(pycsgame.KEY_SPACE):
+            cam.MoveUp(speed)
+        
+        if win.IsKeyPressed(pycsgame.KEY_SHIFT):
+            cam.MoveDown(speed)
+        
+        text.text = (f"position: {cam.position}, camera: {cam.rotation}")
+        print((f"position: {cam.position}, camera: {cam.rotation}"))
 
 
 
