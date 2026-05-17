@@ -22,7 +22,9 @@ class Rect3d:
 
     def rotate_ip(self, delta: Vector3):
         self.raw.Rotate(delta.raw)
-
+    
+    def assign_texture(self, texture_path:str, face:CubeFace):
+        self.raw.assign_tex(texture_path, face.value)
 
     @property
     def x(self): return self.pos.x

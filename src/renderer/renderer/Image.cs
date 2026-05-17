@@ -103,7 +103,7 @@ namespace csgame
                 Initialize(gl);
                 LoadTexture(gl);
             }
-
+            gl.Disable(EnableCap.CullFace);
             UpdateBuffer(gl);
 
             ApplyModelMatrix(gl, shader);
@@ -127,6 +127,7 @@ namespace csgame
                 0,
                 6
             );
+            gl.Enable(EnableCap.CullFace);
         }
         protected override void UpdateBuffer(GL gl)
         {
@@ -154,39 +155,13 @@ namespace csgame
             }
         }
 
-        public override void Initialize(GL gl)
+        public override void Initialize(
+            GL gl,
+            bool textured = true
+        )
         {
-            vao = gl.GenVertexArray();
-            vbo = gl.GenBuffer();
-
-            gl.BindVertexArray(vao);
-            gl.BindBuffer(BufferTargetARB.ArrayBuffer, vbo);
-
-            // Position
-            gl.VertexAttribPointer(
-                0,
-                3,
-                VertexAttribPointerType.Float,
-                false,
-                5 * sizeof(float),
-                (void*)0
-            );
-            gl.EnableVertexAttribArray(0);
-
-            // UV
-            gl.VertexAttribPointer(
-                1,
-                2,
-                VertexAttribPointerType.Float,
-                false,
-                5 * sizeof(float),
-                (void*)(3 * sizeof(float))
-            );
-            gl.EnableVertexAttribArray(1);
-
-            initialized = true;
+            base.Initialize(gl, true);
         }
-
         public void Move_ip(float x, float y)
         {
             _pos.ChangeBy(x, y);
@@ -412,7 +387,7 @@ namespace csgame
                 initialized = true;
                 _dirty = true;
             }
-
+            gl.Disable(EnableCap.CullFace);
             if (_dirty)
             {
                 CreateTextTexture(gl);
@@ -455,6 +430,7 @@ namespace csgame
                 0,
                 6
             );
+            gl.Enable(EnableCap.CullFace);
         }
     }
 }

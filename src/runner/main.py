@@ -46,6 +46,10 @@ def run():
     win.add(img)
     win.add(cir)
 
+    rect3d.assign_texture("Images/cs.png", pycsgame.CubeFace.FRONT)
+    rect3d.assign_texture("Images/cs.png", pycsgame.CubeFace.BACK)
+    rect3d.assign_texture("Images/cs.png", pycsgame.CubeFace.LEFT)
+    
 
     print("Starting render loop...")
     mouse = False
@@ -54,41 +58,41 @@ def run():
 
         speed = 2 * dt
         
-        if win.IsKeyPressed(pycsgame.KEY_ESCAPE):
+        if win.IsKeyPressed(pycsgame.KeyboardKey.K_ESCAPE):
             win.quit()
 
         
         
         if mouse: win.update_camera(0.002)
 
-        if win.IsKeyPressed(pycsgame.KEY_P):
+        if win.IsKeyPressed(pycsgame.KeyboardKey.K_P):
             mouse = not mouse 
 
 
         
 
-        if win.IsKeyPressed(pycsgame.KEY_W):
+        if win.IsKeyPressed(pycsgame.KeyboardKey.K_W):
             cam.MoveForwards(speed)
 
-        if win.IsKeyPressed(pycsgame.KEY_S):
+        if win.IsKeyPressed(pycsgame.KeyboardKey.K_S):
             cam.MoveBackwards(speed)
 
 
-        if win.IsKeyPressed(pycsgame.KEY_A):
+        if win.IsKeyPressed(pycsgame.KeyboardKey.K_A):
             cam.MoveLeft(speed)
 
 
-        if win.IsKeyPressed(pycsgame.KEY_D):
+        if win.IsKeyPressed(pycsgame.KeyboardKey.K_D):
             cam.MoveRight(speed)
 
-        if win.IsKeyPressed(pycsgame.KEY_SPACE):
+        if win.IsKeyPressed(pycsgame.KeyboardKey.K_SPACE):
             cam.MoveUp(speed)
         
-        if win.IsKeyPressed(pycsgame.KEY_SHIFT):
+        if win.IsKeyPressed(pycsgame.KeyboardKey.K_SHIFT):
             cam.MoveDown(speed)
         
         text.text = (f"position: {cam.position}, camera: {cam.rotation}")
-        print((f"position: {cam.position}, camera: {cam.rotation}"))
+
 
 
 

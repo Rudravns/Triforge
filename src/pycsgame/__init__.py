@@ -59,7 +59,6 @@ __all__ = [
     "CSINT",
     "CSFLOAT",
     "CSDOUBLE",
-    "CSKEY",
     "CSIMAGE",
     "CSRECT",
     "CSTRIANGLE",
@@ -68,6 +67,9 @@ __all__ = [
     'Circle',
     'Rect3d',
     'Camera',
+    'KeyboardKey',
+    'CubeFace'
+
 
 
 

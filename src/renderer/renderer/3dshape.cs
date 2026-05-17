@@ -3,6 +3,8 @@ using Silk.NET.OpenGL;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.IO;
+using StbImageSharp;
 
 namespace csgame
 {
@@ -65,9 +67,23 @@ namespace csgame
         }
     }
 
+    public enum CubeFace
+    {
+        Front,
+        Back,
+        Left,
+        Right,
+        Top,
+        Bottom
+    }
     public unsafe class Rect3D : Drawable
     {
         private Vector3d<float> size;
+        private Dictionary<CubeFace, uint> textures = new Dictionary<CubeFace, uint>();
+
+        private Dictionary<CubeFace, string> pendingTextures =new Dictionary<CubeFace, string>();
+        private GL currentGL;
+
 
         public Rect3D(
             Vector3d<float> pos,
@@ -87,66 +103,68 @@ namespace csgame
 
         protected override void UpdateBuffer(GL gl)
         {
+            currentGL = gl;
+
             float w = size.X / 2f;
             float h = size.Y / 2f;
             float d = size.Z / 2f;
 
             float[] vertices =
             {
-                // FRONT
-                -w, -h,  d,
-                 w, -h,  d,
-                 w,  h,  d,
+            // FRONT
+            -w,-h, d, 0f,0f,
+             w,-h, d, 1f,0f,
+             w, h, d, 1f,1f,
 
-                 w,  h,  d,
-                -w,  h,  d,
-                -w, -h,  d,
+             w, h, d, 1f,1f,
+            -w, h, d, 0f,1f,
+            -w,-h, d, 0f,0f,
 
-                // BACK
-                -w, -h, -d,
-                -w,  h, -d,
-                 w,  h, -d,
+            // BACK
+            -w,-h,-d, 0f,0f,
+            -w, h,-d, 0f,1f,
+             w, h,-d, 1f,1f,
 
-                 w,  h, -d,
-                 w, -h, -d,
-                -w, -h, -d,
+             w, h,-d, 1f,1f,
+             w,-h,-d, 1f,0f,
+            -w,-h,-d, 0f,0f,
 
-                // LEFT
-                -w,  h,  d,
-                -w,  h, -d,
-                -w, -h, -d,
+            // LEFT
+            -w, h, d, 1f,1f,
+            -w, h,-d, 0f,1f,
+            -w,-h,-d, 0f,0f,
 
-                -w, -h, -d,
-                -w, -h,  d,
-                -w,  h,  d,
+            -w,-h,-d, 0f,0f,
+            -w,-h, d, 1f,0f,
+            -w, h, d, 1f,1f,
 
-                // RIGHT
-                 w,  h,  d,
-                 w, -h, -d,
-                 w,  h, -d,
+            // RIGHT
+             w, h, d, 0f,1f,
+             w,-h,-d, 1f,0f,
+             w, h,-d, 1f,1f,
 
-                 w, -h, -d,
-                 w,  h,  d,
-                 w, -h,  d,
+             w,-h,-d, 1f,0f,
+             w, h, d, 0f,1f,
+             w,-h, d, 0f,0f,
 
-                // TOP
-                -w,  h, -d,
-                -w,  h,  d,
-                 w,  h,  d,
+            // TOP
+            -w, h,-d, 0f,1f,
+            -w, h, d, 0f,0f,
+             w, h, d, 1f,0f,
 
-                 w,  h,  d,
-                 w,  h, -d,
-                -w,  h, -d,
+             w, h, d, 1f,0f,
+             w, h,-d, 1f,1f,
+            -w, h,-d, 0f,1f,
 
-                // BOTTOM
-                -w, -h, -d,
-                 w, -h,  d,
-                -w, -h,  d,
+            // BOTTOM
+            -w,-h,-d, 0f,1f,
+             w,-h, d, 1f,0f,
+            -w,-h, d, 0f,0f,
 
-                 w, -h,  d,
-                -w, -h, -d,
-                 w, -h, -d
-            };
+             w,-h, d, 1f,0f,
+            -w,-h,-d, 0f,1f,
+             w,-h,-d, 1f,1f
+        };
 
             gl.BindBuffer(
                 BufferTargetARB.ArrayBuffer,
@@ -167,29 +185,122 @@ namespace csgame
         public override void Draw(GL gl, uint shader)
         {
             if (!initialized)
-                Initialize(gl);
+                Initialize(gl, true);
 
-            int useTexLoc =
-                gl.GetUniformLocation(shader, "uUseTexture");
+            currentGL = gl;
 
-            gl.Uniform1(useTexLoc, 0);
-
+            foreach (var kv in pendingTextures)
+            {
+                if (!textures.ContainsKey(kv.Key))
+                {
+                    textures[kv.Key] =
+                        LoadTexture(kv.Value);
+                }
+            }
             ApplyModelMatrix(gl, shader);
 
             UpdateBuffer(gl);
 
             gl.BindVertexArray(vao);
 
+            int useTexLoc =
+                gl.GetUniformLocation(shader, "uUseTexture");
+
             int colorLoc =
                 gl.GetUniformLocation(shader, "uColor");
 
             gl.Uniform4(colorLoc, r, g, b, a);
 
-            gl.DrawArrays(
-                PrimitiveType.Triangles,
-                0,
-                36
+            CubeFace[] faces =
+            {
+                CubeFace.Front,
+                CubeFace.Back,
+                CubeFace.Left,
+                CubeFace.Right,
+                CubeFace.Top,
+                CubeFace.Bottom
+            };
+
+            for (int i = 0; i < 6; i++)
+            {
+                if (textures.ContainsKey(faces[i]))
+                {
+                    gl.Uniform1(useTexLoc, 1);
+
+                    gl.ActiveTexture(TextureUnit.Texture0);
+
+                    gl.BindTexture(
+                        TextureTarget.Texture2D,
+                        textures[faces[i]]
+                    );
+                }
+                else
+                {
+                    gl.Uniform1(useTexLoc, 0);
+                }
+
+                gl.DrawArrays(
+                    PrimitiveType.Triangles,
+                    i * 6,
+                    6
+                );
+            }
+        }
+
+        private unsafe uint LoadTexture(
+            string path
+        )
+        {
+            uint tex =
+                currentGL.GenTexture();
+
+            currentGL.BindTexture(
+                TextureTarget.Texture2D,
+                tex
             );
+
+            ImageResult img;
+
+            using (var stream = File.OpenRead(path))
+            {
+                img = ImageResult.FromStream(
+                    stream,
+                    ColorComponents.RedGreenBlueAlpha
+                );
+            }
+
+            fixed (byte* d = img.Data)
+            {
+                currentGL.TexImage2D(
+                    TextureTarget.Texture2D,
+                    0,
+                    InternalFormat.Rgba,
+                    (uint)img.Width,
+                    (uint)img.Height,
+                    0,
+                    PixelFormat.Rgba,
+                    PixelType.UnsignedByte,
+                    d
+                );
+            }
+
+            currentGL.GenerateMipmap(
+                TextureTarget.Texture2D
+            );
+
+            return tex;
+        }
+
+
+        public void assign_tex(
+            string path,
+            int face
+        )
+        {
+            CubeFace cubeFace =
+                (CubeFace)face;
+
+            pendingTextures[cubeFace] = path;
         }
 
         public void SetSize(Vector3d<float> newSize)

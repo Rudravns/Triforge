@@ -22,7 +22,10 @@ namespace csgame
 
         protected abstract void UpdateBuffer(GL gl);
 
-        public virtual void Initialize(GL gl)
+        public virtual void Initialize(
+            GL gl,
+            bool textured = false
+        )
         {
             vao = gl.GenVertexArray();
             vbo = gl.GenBuffer();
@@ -30,17 +33,43 @@ namespace csgame
             gl.BindVertexArray(vao);
             gl.BindBuffer(BufferTargetARB.ArrayBuffer, vbo);
 
-            // NOW USING VEC3
-            gl.VertexAttribPointer(
-                0,
-                3,
-                VertexAttribPointerType.Float,
-                false,
-                3 * sizeof(float),
-                (void*)0
-            );
+            if (textured)
+            {
+                gl.VertexAttribPointer(
+                    0,
+                    3,
+                    VertexAttribPointerType.Float,
+                    false,
+                    5 * sizeof(float),
+                    (void*)0
+                );
 
-            gl.EnableVertexAttribArray(0);
+                gl.EnableVertexAttribArray(0);
+
+                gl.VertexAttribPointer(
+                    1,
+                    2,
+                    VertexAttribPointerType.Float,
+                    false,
+                    5 * sizeof(float),
+                    (void*)(3 * sizeof(float))
+                );
+
+                gl.EnableVertexAttribArray(1);
+            }
+            else
+            {
+                gl.VertexAttribPointer(
+                    0,
+                    3,
+                    VertexAttribPointerType.Float,
+                    false,
+                    3 * sizeof(float),
+                    (void*)0
+                );
+
+                gl.EnableVertexAttribArray(0);
+            }
 
             initialized = true;
         }
@@ -79,7 +108,7 @@ namespace csgame
         {
             if (!initialized)
                 Initialize(gl);
-
+            gl.Disable(EnableCap.CullFace);
             int useTexLoc =
                 gl.GetUniformLocation(shader, "uUseTexture");
 
@@ -101,6 +130,7 @@ namespace csgame
                 0,
                 6
             );
+            gl.Enable(EnableCap.CullFace);
         }
 
         protected override void UpdateBuffer(GL gl)
@@ -193,7 +223,7 @@ namespace csgame
         {
             if (!initialized)
                 Initialize(gl);
-
+            gl.Disable(EnableCap.CullFace);
             int useTexLoc =
                 gl.GetUniformLocation(shader, "uUseTexture");
 
@@ -215,6 +245,7 @@ namespace csgame
                 0,
                 3
             );
+            gl.Enable(EnableCap.CullFace);
         }
     }
 
@@ -241,7 +272,7 @@ namespace csgame
         public override void Draw(GL gl, uint shader)
         {
             if (!initialized) Initialize(gl);
-
+            gl.Disable(EnableCap.CullFace);
             int useTexLoc = gl.GetUniformLocation(shader, "uUseTexture");
             gl.Uniform1(useTexLoc, 0);
 
@@ -255,6 +286,7 @@ namespace csgame
 
             // +2 vertices: 1 for the center vertex, 1 to close the loop at the start/end
             gl.DrawArrays(PrimitiveType.TriangleFan, 0, (uint)(segments + 2));
+            gl.Enable(EnableCap.CullFace);
         }
 
         protected override void UpdateBuffer(GL gl)

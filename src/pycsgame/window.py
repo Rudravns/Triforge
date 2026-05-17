@@ -98,8 +98,8 @@ class window:
     def add(self, obj):
         self.internal.AddDrawable(obj.get_raw())
 
-    def IsKeyPressed(self, key:constants.CSKEY) -> bool:
-        cs_key = cg.KeyboardKey(key)
+    def IsKeyPressed(self, key:constants.KeyboardKey) -> bool:
+        cs_key = cg.KeyboardKey(key.value)
         return self.internal.IsKeyPressed(cs_key)
 
     def set_camera(self, cam: Camera):

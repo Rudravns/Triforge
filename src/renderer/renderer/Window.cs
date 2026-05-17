@@ -228,7 +228,7 @@ namespace csgame
                     fpsTimer = 0.0;
                 }
 
-                onUpdate?.Invoke(dt);
+                onUpdate?.Invoke((float)dt);
             };
 
             window.Render += OnRender;
