@@ -111,11 +111,12 @@ namespace csgame
     public unsafe class Rectangle : Drawable
     {
         private Rect rectData;
+        public float z;
 
-        public Rectangle(Rect rect, Vector4d<float> color)
+        public Rectangle(Rect rect, Vector4d<float> color, float z)
         {
             rectData = rect;
-
+            this.z = z;
             r = color.R / 255f;
             g = color.G / 255f;
             b = color.B / 255f;
@@ -157,21 +158,19 @@ namespace csgame
             float y = rectData.Y;
             float w = rectData.W;
             float h = rectData.H;
-
-            float z = 0f;
-
+            
             // 2 TRIANGLES = RECTANGLE
             float[] vertices =
             {
                 // Triangle 1
-                x,     y,     z,
-                x+w,   y,     z,
-                x,     y+h,   z,
+                x,     y,     this.z,
+                x+w,   y,     this.z,
+                x,     y+h,   this.z,
 
                 // Triangle 2
-                x+w,   y,     z,
-                x+w,   y+h,   z,
-                x,     y+h,   z
+                x+w,   y,     this.z,
+                x+w,   y+h,   this.z,
+                x,     y+h,   this.z
             };
 
             gl.BindBuffer(
@@ -276,8 +275,9 @@ namespace csgame
         private Vector2d<float> center;
         private float radius;
         private int segments;
+        public float z;
 
-        public Circle(Vector2d<float> center, float radius, Vector4d<float> color, int segments = 36)
+        public Circle(Vector2d<float> center, float radius, Vector4d<float> color, int segments = 36, float z = 0f)
         {
             this.center = center;
             this.radius = radius;
@@ -288,9 +288,18 @@ namespace csgame
             g = color.G / 255f;
             b = color.B / 255f;
             a = color.A;
+            this.z = z;
+
+            Transform.Position = new Vector3d<float>(center.X, center.Y, z);
         }
 
-        public override void Draw(GL gl, uint shader)
+        public float[] pos()
+        {
+            return new float[]{Transform.Position.X, Transform.Position.Y, Transform.Position.Z};
+        }
+    
+
+    public override void Draw(GL gl, uint shader)
         {
             if (!initialized) Initialize(gl);
             gl.Disable(EnableCap.CullFace);
@@ -325,11 +334,10 @@ namespace csgame
 
                 float x = center.X + (radius * (float)Math.Cos(angle));
                 float y = center.Y + (radius * (float)Math.Sin(angle));
-                float z = 0f;
 
                 vertices.Add(x);
                 vertices.Add(y);
-                vertices.Add(z);
+                vertices.Add(this.z);
             }
 
             float[] verticesArray = vertices.ToArray();
@@ -350,6 +358,11 @@ namespace csgame
         {
             center.X += dx;
             center.Y += dy;
+        }
+
+        public void Rotate(Vector3d<float> amount)
+        {
+            Transform.Rotation += amount;
         }
     }
 }

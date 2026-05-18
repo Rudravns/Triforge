@@ -19,13 +19,13 @@ def run():
     window_size = triforge.Vector2(800, 600, triforge.CSINT)
     
     # Create the window
-    win = triforge.window(window_size, "test", True)
+    win = triforge.window(window_size, "test", False)
     cam = triforge.Camera()
     win.set_camera(cam)
     
 
     # Create a rectangle
-    shape = triforge.Rect(5, -0.5, 1.0, 1.0, sky_blue)
+    shape = triforge.Rect(5, -0.5, 1.0, 1.0, sky_blue, z=4.0)
     shape2 = triforge.Rect(6, -0.5, 1.0, 1.0, red)
     tri = triforge.Triangle([triforge.Vector3(0, 5, 0), triforge.Vector3(1, 5, 0), triforge.Vector3(0, 6, 0)])
     img = triforge.Image(
@@ -38,7 +38,7 @@ def run():
     txt2 = triforge.Text("Hello World!", triforge.Vector2(-0.9, -0.9), 32, sky_blue)
     txt2.isScreenSpace = True
     cir = triforge.Circle(triforge.Vector2(3, 0), 0.5, sky_blue)
-    rect3d = triforge.Rect3d(triforge.Vector3(0, 0, 0), triforge.Vector3(1, 1, 1), sky_blue)
+    rect3d = triforge.Rect3d(triforge.Vector3(0, 0, 5), triforge.Vector3(1, 1, 1), sky_blue)
     fps.isScreenSpace = True
     # Add the shape to the window's draw list
     win.add(rect3d)
@@ -65,6 +65,7 @@ def run():
             win.quit()
 
         rect3d.rotate_ip(triforge.Vector3(0, dt, 0))
+        cir.rotate_ip(triforge.Vector3(0, dt, 0))
         
         win.update_camera(0.002)
 
@@ -102,7 +103,7 @@ def run():
         is_lmb = win.isMousedown(triforge.MouseButton.LEFT)
         is_lmb_clicked = win.isMouseClicked(triforge.MouseButton.LEFT)
         text.text = f"pos: {cam.position}, rot: {cam.rotation}, p_down: {down}, LMB: {is_lmb}, Click: {is_lmb_clicked}"
-        txt2.text = f"mouse_pos: {win.mouse_pos}, collide:{shape.collide(shape2)}"
+        txt2.text = f"mouse_pos: {win.mouse_pos}. {cir.position}"
 
 
 

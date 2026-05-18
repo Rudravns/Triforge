@@ -11,12 +11,12 @@ from typing import overload, Union
 
 class Rect:
     @overload
-    def __init__(self, x: float, y: float, w: float, h: float, color: Color = Color(255, 255, 255)) -> None: ...
+    def __init__(self, x: float, y: float, w: float, h: float, color: Color = Color(255, 255, 255), z = 0.0) -> None: ...
 
     @overload
-    def __init__(self, rect: tuple[float, float, float, float], color: Color = Color(255, 255, 255)) -> None: ...
+    def __init__(self, rect: tuple[float, float, float, float], color: Color = Color(255, 255, 255), z = 0.0) -> None: ...
 
-    def __init__(self, rect_or_x: Union[tuple[float, float, float, float], float], *args, color: Color = None) -> None:  # pyright: ignore[reportArgumentType]
+    def __init__(self, rect_or_x: Union[tuple[float, float, float, float], float], *args, color: Color = None, z = 0.0) -> None:  # pyright: ignore[reportArgumentType]
         if isinstance(rect_or_x, (tuple, list)):
             # Overload: Rect((x, y, w, h), color=...)
             x, y, w, h = rect_or_x
@@ -32,6 +32,7 @@ class Rect:
                 raise TypeError("Rect() requires 4 float arguments (x, y, w, h) or a 4-element tuple")
 
         # Create the raw C# Rect object
+        self.z = z
         self.raw = cg.Rect(System.Single(x), System.Single(y), System.Single(w), System.Single(h))
 
 
@@ -61,6 +62,7 @@ class Rect:
     @y.setter
     def y(self, v): self.raw.Y = System.Single(v)
 
+
     @property
     def w(self): return self.raw.W
     @w.setter
@@ -85,7 +87,7 @@ class Rect:
         raw_rect = self.raw
         raw_color = self.color_obj.raw if hasattr(self.color_obj, 'raw') else self.color_obj
 
-        return cg.Rectangle(raw_rect, raw_color)
+        return cg.Rectangle(raw_rect, raw_color, System.Single(self.z))
     
     def __repr__(self) -> str:
         return f"Rect(X={self.x}, Y={self.y}, W={self.w}, H={self.h}, Color={self.color})"
@@ -133,6 +135,9 @@ class Circle:
 
     def move_ip(self, x:float = 0.0, y:float = 0.0):
         self.raw.Move(x, y)
+    
+    def rotate_ip(self, delta: Vector3):
+        self.raw.Rotate(delta.raw)
 
     @property
     def center(self): return self.raw.center
@@ -144,6 +149,8 @@ class Circle:
     @radius.setter
     def radius(self, v:float): self.raw.radius = v
 
+    @property
+    def position(self): return self.raw.pos
     
 
 pass
