@@ -1,39 +1,32 @@
-#--- Python ---
-
-pycache/
+# Python
+__pycache__/
 *.py[cod]
 *$py.class
-.env
-.venv
-env/
+.venv/
 venv/
 ENV/
-.vscode/
 
-#--- .NET / C# ---
-
+# C++ / Visual Studio / Build artifacts
+.vs/
+out/
+build/
 bin/
 obj/
-*.user
-*.userosscache
-*.sln.docstates
-.vs/
-
-#--- Native / OS ---
-
-*.dll
 *.exe
 *.pdb
-*.so
-*.dylib
+*.user
+*.ilk
+*.sln.doccache
+
+# C# / .NET
+[Bb]in/
+[Oo]bj/
+*.userprefs
+*.csproj.user
+
+# OS specific
 .DS_Store
 Thumbs.db
 
-#--- Project Specific ---
-
-Ignore the compiled renderer output specifically if you want to rebuild it each time
-
-src/renderer/renderer/bin/
-
-src/renderer/renderer/obj/
-
+# triforge specific logs or temp files
+*.log

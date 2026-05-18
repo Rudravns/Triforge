@@ -501,7 +501,7 @@ namespace csgame
     {
         public string write()
         {
-            return "try 3";
+            return "try 4";
         }
 
         public int add(int a, int b)

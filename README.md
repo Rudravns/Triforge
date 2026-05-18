@@ -1,42 +1,144 @@
-# FPS Project
+# triforge
 
-This project is a Python-based game development environment utilizing the `pycsgame` library. It provides a simplified interface for window management, rendering primitives, and handling game loops, leveraging C#-style type precision for performance and compatibility.
+A hybrid game engine and rendering framework built with C++, C#, and Python.
+
+triforge combines native performance, modern rendering, and high-level scripting into a modular multi-language architecture designed for experimentation, engine development, and game creation.
+
+---
+
+## Architecture
+
+```text
+Python
+↓
+C# Renderer Layer
+↓
+C++ Native Backend
+```
+
+### Layers
+
+- **C++ Backend**
+- Native performance systems
+- Collision detection
+- Physics and math systems
+- Future ECS/runtime systems
+
+- **C# Renderer**
+- OpenGL rendering
+- Windowing and input
+- Scene management
+- GPU resource handling
+
+- **Python API**
+- Gameplay scripting
+- Rapid prototyping
+- Testing and development
+
+---
+
+## Features
+
+- OpenGL rendering
+- 2D and 3D primitives
+- Camera systems
+- Texture rendering
+- Text rendering
+- Input handling
+- Native C++ acceleration
+- Python scripting support
+- Shared library architecture
+
+---
 
 ## Project Structure
 
 ```text
-FPS/
+triforge/
 ├── src/
-│   ├── pycsgame/         # The core game engine wrapper
-│   └── runner/
-│       └── main.py       # Main entry point for the application
+│ ├── backend/ # Native C++ backend
+│ ├── renderer/ # C# rendering engine
+│ ├── pytriforge/ # Python bindings
+│ └── runner/ # Test scripts and examples
+│
+├── assets/
+├── examples/
 └── README.md
 ```
 
-## Requirements
+---
 
-- Python 3.8+
-- `pycsgame` dependencies (ensure the `src` directory is in your `PYTHONPATH`)
+## Technologies
 
-## How to Run
+- **C++20**
+- **C# / .NET**
+- **Python**
+- **OpenGL**
+- **Silk.NET**
+- **Python.NET**
+- **CMake**
 
-To start the application, navigate to the project root and execute the runner script:
+---
 
-```bash
-python src/runner/main.py
-```
+## Goals
 
-## Basic Usage
+triforge is designed to explore:
+- engine architecture
+- rendering systems
+- native interop
+- scripting systems
+- graphics programming
+- physics systems
+- custom tooling
 
-The current implementation in `main.py` demonstrates how to:
-1.  **Initialize a Window**: Create a window with specific dimensions using `Vector2` and explicit `CSINT` (System.Int32) types.
-2.  **Define Colors**: Use RGBA values via `pycsgame.Color`.
-3.  **Draw Shapes**: Create rectangles using `pycsgame.Rect` and add them to the window's draw list.
-4.  **Manage the Loop**: Start the rendering engine using `pycsgame.run()`.
+---
 
-## Example Snippet
+## Current State
 
-```python
-window_size = pycsgame.Vector2(800, 600, pycsgame.CSINT)
-win = pycsgame.create_window(window_size, "Game Window")
-```
+The engine currently supports:
+- window creation
+- rendering pipelines
+- textures
+- camera movement
+- input systems
+- collision detection
+- Python scripting integration
+
+---
+
+## Future Plans
+
+- physics engine
+- ECS architecture
+- model loading
+- shaders/material system
+- lighting
+- audio
+- networking
+- editor tooling
+- Vulkan backend
+- multithreading
+
+---
+
+## Development
+
+### Backend (C++)
+
+Uses CMake and builds as a shared library (`DLL`).
+
+### Renderer (C#)
+
+Built with .NET and Silk.NET.
+
+### Python API
+
+Powered through Python.NET bindings.
+
+---
+
+## License
+
+Currently in active development.
+
+

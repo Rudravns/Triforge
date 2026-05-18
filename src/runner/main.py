@@ -5,38 +5,40 @@ from pathlib import Path
 # Add src directory to path so csgame can be imported
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import pycsgame
+import triforge
 
 
     
 
 def run():
     # Setup colors with explicit Single precision
-    sky_blue = pycsgame.Color(135, 206, 235, 255)
+    sky_blue = triforge.Color(135, 206, 235, 255)
+    red = triforge.Color(255, 0, 0, 255)
     
     # FIX: Use CSINT (System.Int32) for window dimensions
-    window_size = pycsgame.Vector2(800, 600, pycsgame.CSINT)
+    window_size = triforge.Vector2(800, 600, triforge.CSINT)
     
     # Create the window
-    win = pycsgame.window(window_size, "test", True)
-    cam = pycsgame.Camera()
+    win = triforge.window(window_size, "test", True)
+    cam = triforge.Camera()
     win.set_camera(cam)
     
 
     # Create a rectangle
-    shape = pycsgame.Rect(5, -0.5, 1.0, 1.0, sky_blue)
-    tri = pycsgame.Triangle([pycsgame.Vector3(0, 5, 0), pycsgame.Vector3(1, 5, 0), pycsgame.Vector3(0, 6, 0)])
-    img = pycsgame.Image(
+    shape = triforge.Rect(5, -0.5, 1.0, 1.0, sky_blue)
+    shape2 = triforge.Rect(6, -0.5, 1.0, 1.0, red)
+    tri = triforge.Triangle([triforge.Vector3(0, 5, 0), triforge.Vector3(1, 5, 0), triforge.Vector3(0, 6, 0)])
+    img = triforge.Image(
         "Images/cs.png",
-        pycsgame.Vector2(-2.5, -2.5),
-        pycsgame.Vector2(1.0, 1.0)
+        triforge.Vector2(-2.5, -2.5),
+        triforge.Vector2(1.0, 1.0)
     )
-    text = pycsgame.Text("Hello World!", pycsgame.Vector2(-0.9, -0.9), 32, sky_blue)
-    fps = pycsgame.Text(f"FPS: 0", pycsgame.Vector2(-0.9, 0.9), 32, sky_blue)
-    txt2 = pycsgame.Text("Hello World!", pycsgame.Vector2(-0.9, -0.9), 32, sky_blue)
+    text = triforge.Text("Hello World!", triforge.Vector2(-0.9, -0.9), 32, sky_blue)
+    fps = triforge.Text(f"FPS: 0", triforge.Vector2(-0.9, 0.9), 32, sky_blue)
+    txt2 = triforge.Text("Hello World!", triforge.Vector2(-0.9, -0.9), 32, sky_blue)
     txt2.isScreenSpace = True
-    cir = pycsgame.Circle(pycsgame.Vector2(3, 0), 0.5, sky_blue)
-    rect3d = pycsgame.Rect3d(pycsgame.Vector3(0, 0, 0), pycsgame.Vector3(1, 1, 1), sky_blue)
+    cir = triforge.Circle(triforge.Vector2(3, 0), 0.5, sky_blue)
+    rect3d = triforge.Rect3d(triforge.Vector3(0, 0, 0), triforge.Vector3(1, 1, 1), sky_blue)
     fps.isScreenSpace = True
     # Add the shape to the window's draw list
     win.add(rect3d)
@@ -47,10 +49,11 @@ def run():
     win.add(cir)
     win.add(fps)
     win.add(txt2)
+    win.add(shape2)
     
-    rect3d.assign_texture("Images/cs.png", pycsgame.CubeFace.FRONT)
-    rect3d.assign_texture("Images/cs.png", pycsgame.CubeFace.BACK)
-    rect3d.assign_texture("Images/cs.png", pycsgame.CubeFace.LEFT)
+    rect3d.assign_texture("Images/cs.png", triforge.CubeFace.FRONT)
+    rect3d.assign_texture("Images/cs.png", triforge.CubeFace.BACK)
+    rect3d.assign_texture("Images/cs.png", triforge.CubeFace.LEFT)
     
 
     print("Starting render loop...")
@@ -58,44 +61,48 @@ def run():
         speed = 2 * dt
         fps.text = f"FPS: {round(win.get_fps())}"
 
-        if win.IsKeyPressed(pycsgame.KeyboardKey.K_ESCAPE):
+        if win.IsKeyPressed(triforge.KeyboardKey.K_ESCAPE):
             win.quit()
 
-        rect3d.rotate_ip(pycsgame.Vector3(0, dt, 0))
+        rect3d.rotate_ip(triforge.Vector3(0, dt, 0))
         
         win.update_camera(0.002)
 
-        down = win.isKeyClicked(pycsgame.KeyboardKey.K_P)
+        down = win.isKeyClicked(triforge.KeyboardKey.K_P)
         if down:
             win.camera_mode = not win.camera_mode
 
 
+        if win.IsKeyPressed(triforge.KeyboardKey.K_RIGHTARROW):
+            shape2.move_ip(speed)
+        if win.IsKeyPressed(triforge.KeyboardKey.K_LEFTARROW):
+            shape2.move_ip(-speed)
         
 
-        if win.IsKeyPressed(pycsgame.KeyboardKey.K_W):
+        if win.IsKeyPressed(triforge.KeyboardKey.K_W):
             cam.MoveForwards(speed)
 
-        if win.IsKeyPressed(pycsgame.KeyboardKey.K_S):
+        if win.IsKeyPressed(triforge.KeyboardKey.K_S):
             cam.MoveBackwards(speed)
 
 
-        if win.IsKeyPressed(pycsgame.KeyboardKey.K_A):
+        if win.IsKeyPressed(triforge.KeyboardKey.K_A):
             cam.MoveLeft(speed)
 
 
-        if win.IsKeyPressed(pycsgame.KeyboardKey.K_D):
+        if win.IsKeyPressed(triforge.KeyboardKey.K_D):
             cam.MoveRight(speed)
 
-        if win.IsKeyPressed(pycsgame.KeyboardKey.K_SPACE):
+        if win.IsKeyPressed(triforge.KeyboardKey.K_SPACE):
             cam.MoveUp(speed)
         
-        if win.IsKeyPressed(pycsgame.KeyboardKey.K_SHIFT):
+        if win.IsKeyPressed(triforge.KeyboardKey.K_SHIFT):
             cam.MoveDown(speed)
         
-        is_lmb = win.isMousedown(pycsgame.MouseButton.LEFT)
-        is_lmb_clicked = win.isMouseClicked(pycsgame.MouseButton.LEFT)
+        is_lmb = win.isMousedown(triforge.MouseButton.LEFT)
+        is_lmb_clicked = win.isMouseClicked(triforge.MouseButton.LEFT)
         text.text = f"pos: {cam.position}, rot: {cam.rotation}, p_down: {down}, LMB: {is_lmb}, Click: {is_lmb_clicked}"
-        txt2.text = f"mouse_pos: {win.mouse_pos}"
+        txt2.text = f"mouse_pos: {win.mouse_pos}, collide:{shape.collide(shape2)}"
 
 
 

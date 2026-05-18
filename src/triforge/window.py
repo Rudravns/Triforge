@@ -87,7 +87,7 @@ class window:
         self.down = []
         [self.down.append(False) for _ in constants.KeyboardKey]
         self.mouse = [False, False, False]
-        self.update_cam = True
+        self.update_cam = False
 
     def run(self, update=lambda dt: None, load=lambda window: print("Window loaded successfully!")):
         load_action = Action[cg.MyWindow](load)

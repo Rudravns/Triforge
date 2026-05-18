@@ -284,14 +284,12 @@ namespace csgame
         public float W { get; set; }
         public float H { get; set; }
 
-        // 1. Generic Constructor
         public Rect(float x, float y, float w, float h)
         {
             X = x;
             Y = y;
             W = w;
             H = h;
-
         }
 
         public void Move_ip(float x, float y)
@@ -299,8 +297,23 @@ namespace csgame
             X += x;
             Y += y;
         }
-        
 
-        public override string ToString() => $"({X}, {Y}, {W}, {H})";
+        public bool CheckCollision(Rect other)
+        {
+            return CppIntegration.CheckRectCollision(
+                X,
+                Y,
+                W,
+                H,
+
+                other.X,
+                other.Y,
+                other.W,
+                other.H
+            );
+        }
+
+        public override string ToString()
+            => $"({X}, {Y}, {W}, {H})";
     }
 }

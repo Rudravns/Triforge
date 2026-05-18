@@ -194,6 +194,9 @@ namespace csgame
         {
             rectData.Move_ip(dx, dy);
         }
+        
+
+        
     }
 
     public unsafe class Triangle : Drawable

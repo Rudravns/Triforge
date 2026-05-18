@@ -47,6 +47,9 @@ class Rect:
         y = float(y)
         self.raw.Move_ip(x,y)
 
+    def collide(self, other:"Rect") -> bool:
+        return self.raw.CheckCollision(other.raw)
+    
 
     @property
     def x(self): return self.raw.X

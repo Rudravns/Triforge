@@ -145,6 +145,9 @@
     <PackageReference Include="StbImageSharp" Version="2.30.15" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\cpp_integration.cs">
+      <Link>cpp_integration.cs</Link>
+    </Compile>
     <Compile Include="3dshape.cs" />
     <Compile Include="camera.cs" />
     <Compile Include="Image.cs" />
