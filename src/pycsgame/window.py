@@ -81,14 +81,13 @@ class Camera:
 
 
 
-
 class window:
     def __init__(self, size: csmath.Vector2, title: str ="pycsgame window", vsync:bool = True):
         self.internal = create_window(size, title, vsync)
         self.down = []
         [self.down.append(False) for _ in constants.KeyboardKey]
-        
         self.mouse = [False, False, False]
+        self.update_cam = True
 
     def run(self, update=lambda dt: None, load=lambda window: print("Window loaded successfully!")):
         load_action = Action[cg.MyWindow](load)
@@ -96,7 +95,11 @@ class window:
         self.internal.Run(load_action, update_action)
 
     def update_camera(self, sens = 0.002, lock_mouse = True, hide_mouse = True):
-        self.internal.update_camera(System.Single(sens), lock_mouse, hide_mouse)
+        if self.update_cam:
+            self.internal.update_camera(System.Single(sens), lock_mouse, hide_mouse)
+        else:
+            # Camera update is disabled, ensure mouse is completely free
+            self.LockAndHideMouse(False, False)
 
     def add(self, obj):
         self.internal.AddDrawable(obj.get_raw())
@@ -112,11 +115,11 @@ class window:
                 return True
         else:
             self.down[key.value] = False
-        return False    
-    
+        return False
+
     def isMousedown(self, button: constants.MouseButton) -> bool:
         return self.internal.isMousedown()[button.value]
-    
+
     def isMouseClicked(self, button:constants.MouseButton) -> bool:
         if self.isMousedown(button):
             if not self.mouse[button.value]:
@@ -126,10 +129,15 @@ class window:
             self.mouse[button.value] = False
         return False
 
+    def LockAndHideMouse(self, lock:bool, hide:bool):
+        self.internal.LockAndHideMouse(lock, hide)
+
+    def center_mouse(self):
+        self.internal.center_mouse()
 
     def set_camera(self, cam: Camera):
         self.internal.Camera = cam.get_raw()
-        
+
     def get_fps(self):
         return self.internal.get_fps()
 
@@ -142,8 +150,20 @@ class window:
     @property
     def mouse_pos(self):
         return self.internal.Mouse_pos()
+
     @mouse_pos.setter
     def mouse_pos(self, v: csmath.Vector2):
         self.internal.SetMousePos(v.raw)
 
-    
+    @property
+    def camera_mode(self):
+        return self.update_cam
+
+    @camera_mode.setter
+    def camera_mode(self, v: bool):
+        # Check if we are specifically switching from locked (True) to unlocked (False)
+        if self.update_cam and not v:
+            self.center_mouse()
+            self.LockAndHideMouse(False, False)
+            
+        self.update_cam = v

@@ -54,23 +54,20 @@ def run():
     
 
     print("Starting render loop...")
-    mouse = False
     def update(dt):
-        nonlocal mouse
-
         speed = 2 * dt
         fps.text = f"FPS: {round(win.get_fps())}"
 
         if win.IsKeyPressed(pycsgame.KeyboardKey.K_ESCAPE):
             win.quit()
 
+        rect3d.rotate_ip(pycsgame.Vector3(0, dt, 0))
         
-        
-        if mouse: win.update_camera(0.002)
+        win.update_camera(0.002)
 
         down = win.isKeyClicked(pycsgame.KeyboardKey.K_P)
         if down:
-            mouse = not mouse 
+            win.camera_mode = not win.camera_mode
 
 
         

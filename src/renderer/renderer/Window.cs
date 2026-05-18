@@ -440,6 +440,23 @@ namespace csgame
             }
         }
 
+        public void center_mouse()
+        {
+            if (primaryMouse != null)
+            {
+                // Calculate the center coordinates of the window
+                float centerX = Width / 2f;
+                float centerY = Height / 2f;
+
+                // Warp the mouse position
+                primaryMouse.Position = new Vector2(centerX, centerY);
+
+                // Update lastMousePos so the next frame's 3D look calculation 
+                // doesn't cause a massive camera snap/jump
+                lastMousePos = new Vector2(centerX, centerY);
+            }
+        }
+
         public void update_camera(
             float sensitivity,
             bool lock_mouse = true,
