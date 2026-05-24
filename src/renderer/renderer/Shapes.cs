@@ -23,18 +23,59 @@ namespace csgame
         protected abstract void UpdateBuffer(GL gl);
 
         public virtual void Initialize(
-            GL gl,
-            bool textured = false
-        )
+     GL gl,
+     bool textured = false,
+     bool hasNormals = false
+ )
         {
             vao = gl.GenVertexArray();
             vbo = gl.GenBuffer();
 
             gl.BindVertexArray(vao);
-            gl.BindBuffer(BufferTargetARB.ArrayBuffer, vbo);
+            gl.BindBuffer(
+                BufferTargetARB.ArrayBuffer,
+                vbo
+            );
 
-            if (textured)
+            if (hasNormals)
             {
+                // XYZ UV NORMAL
+                gl.VertexAttribPointer(
+                    0,
+                    3,
+                    VertexAttribPointerType.Float,
+                    false,
+                    8 * sizeof(float),
+                    (void*)0
+                );
+
+                gl.EnableVertexAttribArray(0);
+
+                gl.VertexAttribPointer(
+                    1,
+                    2,
+                    VertexAttribPointerType.Float,
+                    false,
+                    8 * sizeof(float),
+                    (void*)(3 * sizeof(float))
+                );
+
+                gl.EnableVertexAttribArray(1);
+
+                gl.VertexAttribPointer(
+                    2,
+                    3,
+                    VertexAttribPointerType.Float,
+                    false,
+                    8 * sizeof(float),
+                    (void*)(5 * sizeof(float))
+                );
+
+                gl.EnableVertexAttribArray(2);
+            }
+            else if (textured)
+            {
+                // XYZ UV
                 gl.VertexAttribPointer(
                     0,
                     3,
@@ -59,6 +100,7 @@ namespace csgame
             }
             else
             {
+                // XYZ
                 gl.VertexAttribPointer(
                     0,
                     3,
@@ -121,6 +163,12 @@ namespace csgame
             g = color.G / 255f;
             b = color.B / 255f;
             a = color.A;
+
+            Transform.Position = new Vector3d<float>(
+                rect.X + rect.W / 2f,
+                rect.Y + rect.H / 2f,
+                z
+            );
         }
 
         public override void Draw(GL gl, uint shader)
@@ -154,29 +202,26 @@ namespace csgame
 
         protected override void UpdateBuffer(GL gl)
         {
-            float x = rectData.X;
-            float y = rectData.Y;
             float w = rectData.W;
             float h = rectData.H;
-            
-            // 2 TRIANGLES = RECTANGLE
+
+            float hw = w / 2f;
+            float hh = h / 2f;
+
             float[] vertices =
             {
                 // Triangle 1
-                x,     y,     this.z,
-                x+w,   y,     this.z,
-                x,     y+h,   this.z,
+                -hw, -hh, this.z,
+                 hw, -hh, this.z,
+                -hw,  hh, this.z,
 
                 // Triangle 2
-                x+w,   y,     this.z,
-                x+w,   y+h,   this.z,
-                x,     y+h,   this.z
+                 hw, -hh, this.z,
+                 hw,  hh, this.z,
+                -hw,  hh, this.z
             };
 
-            gl.BindBuffer(
-                BufferTargetARB.ArrayBuffer,
-                vbo
-            );
+            gl.BindBuffer(BufferTargetARB.ArrayBuffer, vbo);
 
             fixed (float* v = vertices)
             {
@@ -188,7 +233,6 @@ namespace csgame
                 );
             }
         }
-
         public void Move(float dx, float dy)
         {
             rectData.Move_ip(dx, dy);
@@ -212,16 +256,50 @@ namespace csgame
             g = color.G / 255f;
             b = color.B / 255f;
             a = color.A;
+
+            float cx =
+                (points[0].X +
+                 points[1].X +
+                 points[2].X) / 3f;
+
+            float cy =
+                (points[0].Y +
+                 points[1].Y +
+                 points[2].Y) / 3f;
+
+            float cz =
+                (points[0].Z +
+                 points[1].Z +
+                 points[2].Z) / 3f;
+
+            Transform.Position =
+                new Vector3d<float>(
+                    cx,
+                    cy,
+                    cz
+                );
         }
 
         protected override void UpdateBuffer(GL gl)
         {
+            float cx = Transform.Position.X;
+            float cy = Transform.Position.Y;
+            float cz = Transform.Position.Z;
+
             float[] vertices =
             {
-                points[0].X, points[0].Y, points[0].Z,
-                points[1].X, points[1].Y, points[1].Z,
-                points[2].X, points[2].Y, points[2].Z
-            };
+            points[0].X - cx,
+            points[0].Y - cy,
+            points[0].Z - cz,
+
+            points[1].X - cx,
+            points[1].Y - cy,
+            points[1].Z - cz,
+
+            points[2].X - cx,
+            points[2].Y - cy,
+            points[2].Z - cz
+        };
 
             gl.BindBuffer(
                 BufferTargetARB.ArrayBuffer,
@@ -243,9 +321,14 @@ namespace csgame
         {
             if (!initialized)
                 Initialize(gl);
+
             gl.Disable(EnableCap.CullFace);
+
             int useTexLoc =
-                gl.GetUniformLocation(shader, "uUseTexture");
+                gl.GetUniformLocation(
+                    shader,
+                    "uUseTexture"
+                );
 
             gl.Uniform1(useTexLoc, 0);
 
@@ -256,16 +339,35 @@ namespace csgame
             gl.BindVertexArray(vao);
 
             int colorLoc =
-                gl.GetUniformLocation(shader, "uColor");
+                gl.GetUniformLocation(
+                    shader,
+                    "uColor"
+                );
 
-            gl.Uniform4(colorLoc, r, g, b, a);
+            gl.Uniform4(
+                colorLoc,
+                r, g, b, a
+            );
 
             gl.DrawArrays(
                 PrimitiveType.Triangles,
                 0,
                 3
             );
+
             gl.Enable(EnableCap.CullFace);
+        }
+
+        public void Move(
+            Vector3d<float> amount)
+        {
+            Transform.Position += amount;
+        }
+
+        public void Rotate(
+            Vector3d<float> amount)
+        {
+            Transform.Rotation += amount;
         }
     }
 
@@ -324,20 +426,23 @@ namespace csgame
             // Vertex layout: Center point + peripheral points surrounding it
             List<float> vertices = new List<float>
             {
-                center.X, center.Y, 0f // Center point
+                0f, 0f, 0f
             };
 
             for (int i = 0; i <= segments; i++)
             {
-                // Calculate current angle around the circle
-                float angle = i * ((float)Math.PI * 2f) / segments;
+                float angle =
+                    i * ((float)Math.PI * 2f) / segments;
 
-                float x = center.X + (radius * (float)Math.Cos(angle));
-                float y = center.Y + (radius * (float)Math.Sin(angle));
+                float x =
+                    radius * (float)Math.Cos(angle);
+
+                float y =
+                    radius * (float)Math.Sin(angle);
 
                 vertices.Add(x);
                 vertices.Add(y);
-                vertices.Add(this.z);
+                vertices.Add(z);
             }
 
             float[] verticesArray = vertices.ToArray();

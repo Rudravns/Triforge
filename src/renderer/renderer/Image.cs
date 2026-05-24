@@ -7,21 +7,18 @@ using Silk.NET.OpenGL;
 using Silk.NET.Maths;
 using StbImageSharp;
 
-// Aliases to resolve naming conflicts between libraries
 using GLPixelFormat = Silk.NET.OpenGL.PixelFormat;
 using GDPixelFormat = System.Drawing.Imaging.PixelFormat;
 using GDRectangle = System.Drawing.Rectangle;
 
 namespace csgame
 {
-    
     public unsafe class Image : Drawable
     {
         protected uint _texture;
-        protected Vector2d<float> _pos; // Using your custom Vector2d
+        protected Vector2d<float> _pos;
         protected Vector2d<float> _size;
         protected string _path;
-        public Transform Transform = new Transform();
 
         public Image(string path, Vector2d<float> pos, Vector2d<float> size, float alpha = 1f)
         {
@@ -29,14 +26,15 @@ namespace csgame
             _pos = pos;
             _size = size;
             this.a = alpha;
+            Transform.Position = new Vector3d<float>(pos.X, pos.Y, 0f);
         }
 
-        // Constructor for Text to use internally
         protected Image(Vector2d<float> pos, Vector2d<float> size, float alpha)
         {
             _pos = pos;
             _size = size;
             this.a = alpha;
+            Transform.Position = new Vector3d<float>(pos.X, pos.Y, 0f);
         }
 
         private void LoadTexture(GL gl)
@@ -49,7 +47,8 @@ namespace csgame
 
             using (var stream = File.OpenRead(_path))
             {
-                StbImage.stbi_set_flip_vertically_on_load(1);
+                // Disable flip on load so row 0 (top) stays at the start of memory
+                StbImage.stbi_set_flip_vertically_on_load(0) ;
 
                 ImageResult image = ImageResult.FromStream(
                     stream,
@@ -96,6 +95,7 @@ namespace csgame
                 (int)GLEnum.Linear
             );
         }
+
         public override void Draw(GL gl, uint shader)
         {
             if (!initialized)
@@ -129,22 +129,48 @@ namespace csgame
             );
             gl.Enable(EnableCap.CullFace);
         }
+
         protected override void UpdateBuffer(GL gl)
         {
-            float x = _pos.X;
-            float y = _pos.Y;
-            float w = _size.X;
-            float h = _size.Y;
+            float x_min, y_min, x_max, y_max;
             float z = 0f;
+
+            if (ScreenSpace)
+            {
+                // Placement is handled by Transform.Position (set in constructor or Move_ip).
+                // We draw relative to the origin, where (0,0) is the Top-Left of the image/text.
+                x_min = 0;
+                y_min = 0; 
+                x_max = _size.X;
+                y_max = _size.Y;
+            }
+            else
+            {
+                // In 3D world space, scale down pixel sizes to appropriate metric sizes.
+                float scaleFactor = 0.01f;
+                float w = _size.X * scaleFactor;
+                float h = _size.Y * scaleFactor;
+                x_min = -w / 2.0f;
+                x_max = w / 2.0f;
+                y_min = -h / 2.0f; 
+                y_max = h / 2.0f;
+            }
+            
+            // Bitmaps are top-down (row 0 is top). 
+            // In UI (Y-down), y_min is top. In World (Y-up), y_max is top.
+            float v_top_val = 0f;
+            float v_bottom_val = 1f;
+
             float[] vertices =
             {
-                x,     y,     z, 0f, 1f,
-                x+w,   y,     z, 1f, 1f,
-                x,     y+h,   z, 0f, 0f,
+                // We define quads such that they are CCW in their respective coordinate systems
+                x_min, y_max, z, 0f, (ScreenSpace ? v_bottom_val : v_top_val),    // Top-Left semantic
+                x_min, y_min, z, 0f, (ScreenSpace ? v_top_val : v_bottom_val),    // Bottom-Left semantic
+                x_max, y_min, z, 1f, (ScreenSpace ? v_top_val : v_bottom_val),    // Bottom-Right semantic
 
-                x+w,   y,     z, 1f, 1f,
-                x+w,   y+h,   z, 1f, 0f,
-                x,     y+h,   z, 0f, 0f
+                x_min, y_max, z, 0f, (ScreenSpace ? v_bottom_val : v_top_val),    // Top-Left semantic
+                x_max, y_min, z, 1f, (ScreenSpace ? v_top_val : v_bottom_val),    // Bottom-Right semantic
+                x_max, y_max, z, 1f, (ScreenSpace ? v_bottom_val : v_top_val)     // Top-Right semantic
             };
 
             gl.BindBuffer(BufferTargetARB.ArrayBuffer, vbo);
@@ -157,14 +183,17 @@ namespace csgame
 
         public override void Initialize(
             GL gl,
-            bool textured = true
+            bool textured = true,
+            bool hasNormals = false
         )
         {
-            base.Initialize(gl, true);
+            base.Initialize(gl, true, false);
         }
+
         public void Move_ip(float x, float y)
         {
             _pos.ChangeBy(x, y);
+            Transform.Position = new Vector3d<float>(_pos.X, _pos.Y, 0f);
         }
     }
 
@@ -172,6 +201,7 @@ namespace csgame
     {
         public string _text { get; private set; }
         public int _fontSize { get; private set; }
+        private int _baseFontSize;
 
         private Vector4d<float> _vecColor;
         private FontStyle _style;
@@ -194,6 +224,7 @@ namespace csgame
         {
             _text = text;
             _fontSize = size;
+            _baseFontSize = size;
             _vecColor = color;
 
             _bold = bold;
@@ -283,11 +314,13 @@ namespace csgame
 
                 int width = Math.Max(1, (int)Math.Ceiling(size.Width));
                 int height = Math.Max(1, (int)Math.Ceiling(size.Height));
+                
+                float wr = (float)MyWindow.Width / MyWindow.initialWidth;
+                float hr = (float)MyWindow.Height / MyWindow.initialHeight;
+                float ratio = Math.Max(0.001f, Math.Min(wr, hr));
 
-                _size = new Vector2d<float>(
-                    width / 800f,
-                    height / 600f
-                );
+                // Scale the logical size back down so it fits the fixed UI projection
+                _size = new Vector2d<float>(width / ratio, height / ratio);
 
                 Color drawingColor = Color.FromArgb(
                     (int)Math.Min(255, _vecColor.A * 255),
@@ -302,6 +335,7 @@ namespace csgame
                     GDPixelFormat.Format32bppArgb
                 ))
                 {
+                    // No manual flip needed as UVs are now adjusted to top-down memory
                     using (Graphics gfx = Graphics.FromImage(bitmap))
                     {
                         gfx.TextRenderingHint =
@@ -320,8 +354,6 @@ namespace csgame
                             );
                         }
                     }
-
-                    
 
                     _texture = gl.GenTexture();
 
@@ -387,7 +419,20 @@ namespace csgame
                 initialized = true;
                 _dirty = true;
             }
+
+            // Apply the user's font scaling formula
+            float wr = (float)MyWindow.Width / MyWindow.initialWidth;
+            float hr = (float)MyWindow.Height / MyWindow.initialHeight;
+            int targetFontSize = (int)Math.Max(1, Math.Min(wr * _baseFontSize, hr * _baseFontSize));
+
+            if (targetFontSize != _fontSize)
+            {
+                _fontSize = targetFontSize;
+                _dirty = true;
+            }
+
             gl.Disable(EnableCap.CullFace);
+            gl.DepthMask(false);
             if (_dirty)
             {
                 CreateTextTexture(gl);
@@ -430,7 +475,9 @@ namespace csgame
                 0,
                 6
             );
+            gl.DepthMask(true);
             gl.Enable(EnableCap.CullFace);
+
         }
     }
 }

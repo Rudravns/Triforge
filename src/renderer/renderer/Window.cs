@@ -1,4 +1,4 @@
-﻿using Silk.NET.GLFW;
+﻿﻿using Silk.NET.GLFW;
 using Silk.NET.Input;
 using Silk.NET.Maths;
 using Silk.NET.OpenGL;
@@ -13,86 +13,21 @@ namespace csgame
     public enum KeyboardKey
     {
         // Letters
-        A,
-        B,
-        C,
-        D,
-        E,
-        F,
-        G,
-        H,
-        I,
-        J,
-        K,
-        L,
-        M,
-        N,
-        O,
-        P,
-        Q,
-        R,
-        S,
-        T,
-        U,
-        V,
-        W,
-        X,
-        Y,
-        Z,
+        A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
 
         // Numbers
-        Number0,
-        Number1,
-        Number2,
-        Number3,
-        Number4,
-        Number5,
-        Number6,
-        Number7,
-        Number8,
-        Number9,
+        Number0, Number1, Number2, Number3, Number4, Number5, Number6, Number7, Number8, Number9,
 
         // Arrows
-        Up,
-        Down,
-        Left,
-        Right,
+        Up, Down, Left, Right,
 
         // Special
-        Space,
-        Enter,
-        Escape,
-        Shift,
-        Control,
-        Alt,
-        Backspace,
-        Tab,
-        CapsLock,
+        Space, Enter, Escape, Shift, Control, Alt, Backspace, Tab, CapsLock,
 
         // Function Keys
-        F1,
-        F2,
-        F3,
-        F4,
-        F5,
-        F6,
-        F7,
-        F8,
-        F9,
-        F10,
-        F11,
-        F12
+        F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12
     }
 
-/* python:
- *
- * class name (parent) :
- *  def __init__(var:type = 35 ):
- *  .__super__()
- *      pass
- *
- *
- */
     public class MyWindow
     {
         private IWindow window;
@@ -103,13 +38,16 @@ namespace csgame
         private IMouse primaryMouse;
         private Vector2 lastMousePos;
         private bool firstMouseMove = true;
-       
+        
         private string Title;
-        private int Width;
-        private int Height;
+        public static int Width;
+        public static int Height;
+        public static int initialWidth;
+        public static int initialHeight;
 
 
-        private uint shader;
+        private uint shader2D;
+        private uint shader3D;
         private List<Drawable> drawables = new List<Drawable>();
 
         public (int, int) get_size() => (Width, Height);
@@ -129,9 +67,9 @@ namespace csgame
             Title = title;
             Width = size.X;
             Height = size.Y;
+            initialWidth = size.X;
+            initialHeight = size.Y;
             vsync_ = vsync;
-
-
         }
 
 
@@ -151,9 +89,9 @@ namespace csgame
             {
                 return new bool[]
                 {
-            primaryMouse.IsButtonPressed(Silk.NET.Input.MouseButton.Left),
-            primaryMouse.IsButtonPressed(Silk.NET.Input.MouseButton.Middle),
-            primaryMouse.IsButtonPressed(Silk.NET.Input.MouseButton.Right)
+                    primaryMouse.IsButtonPressed(Silk.NET.Input.MouseButton.Left),
+                    primaryMouse.IsButtonPressed(Silk.NET.Input.MouseButton.Middle),
+                    primaryMouse.IsButtonPressed(Silk.NET.Input.MouseButton.Right)
                 };
             }
 
@@ -176,10 +114,6 @@ namespace csgame
                 primaryMouse.Position = new Vector2(position.X, position.Y);
             }
         }
-
-
-
-
 
         private static readonly Dictionary<KeyboardKey, Key> KeyMap = new Dictionary<KeyboardKey, Key>
         {
@@ -219,7 +153,6 @@ namespace csgame
         public void RemoveDrawable(Drawable drawable) => drawables.Remove(drawable);
 
 
-        // Inside MyWindow class
         public void Run(Action<MyWindow> onLoad, Action<double> onUpdate = null)
         {
             var options = WindowOptions.Default;
@@ -235,19 +168,31 @@ namespace csgame
                 primaryKeyboard = input.Keyboards.Count > 0 ? input.Keyboards[0] : null;
                 primaryMouse = input.Mice.Count > 0 ? input.Mice[0] : null;
 
+                window.Resize += size =>
+                {
+                    Width = size.X;
+                    Height = size.Y;
+
+                    gl.Viewport(
+                        0,
+                        0,
+                        (uint)Width,
+                        (uint)Height
+                    );
+                };
                 gl.Viewport(0, 0, (uint)Width, (uint)Height);
                 gl.Enable(EnableCap.Blend);
                 gl.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
-                gl.Enable(EnableCap.DepthTest); // This enables the depth test
+                gl.Enable(EnableCap.DepthTest);
                 gl.DepthFunc(DepthFunction.Less);
                 gl.Enable(EnableCap.CullFace);
                 gl.CullFace(TriangleFace.Back);
                 gl.FrontFace(FrontFaceDirection.Ccw);
-                shader = CreateShader();
+                shader2D = Create2DShader();
+                shader3D = Create3DShader();
                 onLoad?.Invoke(this);
             };
 
-            // Add this to handle logic (movement, physics) separate from rendering
             window.Update += (dt) =>
             {
                 deltaTime = dt;
@@ -280,18 +225,6 @@ namespace csgame
                 (uint)ClearBufferMask.DepthBufferBit
             );
 
-
-
-            gl.UseProgram(shader);
-            // update the viewport
-            window.Resize += (size) =>
-            {
-                Width = size.X;
-                Height = size.Y;
-
-                gl.Viewport(0, 0, (uint)Width, (uint)Height);
-            };
-
             Matrix4x4 view = Camera.GetViewMatrix();
 
             float aspect = Width / (float)Height;
@@ -304,82 +237,170 @@ namespace csgame
                     100f
                 );
 
-            int viewLoc =
-                gl.GetUniformLocation(shader, "view");
+            Matrix4x4 uiProjection =
+                Matrix4x4.CreateOrthographicOffCenter(
+                    0,
+                    initialWidth,
+                    initialHeight,
+                    0,
+                    -1,
+                    1
+                );
 
-            int projLoc =
-                gl.GetUniformLocation(shader, "projection");
-
-            gl.UniformMatrix4(
-                viewLoc,
-                1,
-                false,
-                (float*)&view
-            );
-
-            gl.UniformMatrix4(
-                projLoc,
-                1,
-                false,
-                (float*)&projection
-            );
+            var worldDrawables = new List<Drawable>();
+            var uiDrawables = new List<Drawable>();
 
             foreach (var drawable in drawables)
             {
-                drawable.Draw(gl, shader);
+                if (drawable.ScreenSpace)
+                    uiDrawables.Add(drawable);
+                else
+                    worldDrawables.Add(drawable);
             }
+
+            // Draw lists cleanly and prevent address context capturing errors
+            void DrawList(List<Drawable> listToDraw, Matrix4x4 localView, Matrix4x4 localProjection)
+            {
+                foreach (var drawable in listToDraw)
+                {
+                    bool isModel = drawable.GetType().Name == "Model";
+                    uint shaderToUse = isModel ? shader3D : shader2D;
+
+                    gl.UseProgram(shaderToUse);
+
+                    int viewLoc = gl.GetUniformLocation(shaderToUse, "view");
+                    int projLoc = gl.GetUniformLocation(shaderToUse, "projection");
+                    int resLoc = gl.GetUniformLocation(shaderToUse, "uResolution");
+
+                    gl.UniformMatrix4(viewLoc, 1, false, (float*)&localView);
+                    gl.UniformMatrix4(projLoc, 1, false, (float*)&localProjection);
+
+                    if (resLoc != -1)
+                    {
+                        gl.Uniform2(resLoc, (float)Width, (float)Height);
+                    }
+
+                    if (shaderToUse == shader3D)
+                    {
+                        gl.Uniform3(
+                            gl.GetUniformLocation(shaderToUse, "lightPos"),
+                            Camera.Position.X,
+                            Camera.Position.Y,
+                            Camera.Position.Z
+                        );
+                    }
+
+                    drawable.Draw(gl, shaderToUse);
+                }
+            }
+
+            // Pass 1: Render 3D World (Depth Testing ON)
+            gl.Enable(EnableCap.DepthTest);
+            DrawList(worldDrawables, view, projection);
+
+            // Pass 2: Render UI / Screenspace (Depth Testing OFF so it is always on top)
+            gl.Disable(EnableCap.DepthTest);
+            DrawList(
+                uiDrawables,
+                Matrix4x4.Identity,
+                uiProjection
+            );
+
+            // Restore state
+            gl.Enable(EnableCap.DepthTest);
         }
 
-
-        private uint CreateShader()
+        private uint Create3DShader()
         {
-            // Updated Vertex Shader to support UVs
             string vertex = @"#version 330 core
 
-            layout (location = 0) in vec3 aPos;
-            layout (location = 1) in vec2 aTexCoord;
+            layout(location = 0) in vec3 aPos;
+            layout(location = 1) in vec2 aTexCoord;
+            layout(location = 2) in vec3 aNormal;
 
             out vec2 TexCoord;
+            out vec3 Normal;
+            out vec3 FragPos;
 
             uniform mat4 model;
             uniform mat4 view;
             uniform mat4 projection;
             uniform int uScreenSpace;
+            uniform vec2 uResolution;
 
             void main()
             {
+                FragPos = vec3(model * vec4(aPos, 1.0));
+
+                Normal =
+                    mat3(transpose(inverse(model)))
+                    * aNormal;
+
                 if (uScreenSpace == 1)
                 {
-                    gl_Position = model * vec4(aPos, 1.0);
+                    vec4 pos = model * vec4(aPos, 1.0);
+                    
+                    float baseAspect = 800.0 / 600.0;
+                    float currentAspect = uResolution.x / max(uResolution.y, 1.0);
+                    pos.x *= (baseAspect / currentAspect);
+                    
+                    gl_Position = pos;
+                    
+                    // Correct flipped Y coordinates for Screen Space (UI coordinates have Y-down)
+                    TexCoord = vec2(aTexCoord.x, 1.0 - aTexCoord.y);
                 }
                 else
                 {
                     gl_Position =
                         projection *
                         view *
-                        model *
-                        vec4(aPos, 1.0);
+                        vec4(FragPos, 1.0);
+                        
+                    TexCoord = aTexCoord;
                 }
-                TexCoord = aTexCoord;
             }";
 
-            // Updated Fragment Shader to support Texture vs Color
             string fragment = @"#version 330 core
-                out vec4 FragColor;
-                in vec2 TexCoord;
 
-                uniform vec4 uColor;
-                uniform sampler2D uTexture;
-                uniform bool uUseTexture; // Toggle: true for images, false for shapes
+            out vec4 FragColor;
 
-                void main() {
-                    if (uUseTexture) {
-                        // Multiply texture by uColor so we can still use alpha/tinting
-                        FragColor = texture(uTexture, TexCoord) * uColor;
-                    } else {
-                        FragColor = uColor;
-                    }
-                }";
+            in vec2 TexCoord;
+            in vec3 Normal;
+            in vec3 FragPos;
+
+            uniform vec4 uColor;
+            uniform sampler2D uTexture;
+            uniform bool uUseTexture;
+
+            uniform vec3 lightPos;
+
+            void main()
+            {
+                vec4 baseColor =
+                    uUseTexture
+                    ? texture(uTexture, TexCoord) * uColor
+                    : uColor;
+
+                vec3 norm =
+                    normalize(Normal);
+
+                vec3 lightDir =
+                    normalize(lightPos - FragPos);
+
+                float diffuse =
+                    max(dot(norm, lightDir), 0.0);
+
+                float ambient = 0.2;
+
+                float lighting =
+                    ambient + diffuse;
+
+                FragColor =
+                    vec4(
+                        baseColor.rgb * lighting,
+                        baseColor.a
+                    );
+            }";
 
             uint vs = gl.CreateShader(ShaderType.VertexShader);
             gl.ShaderSource(vs, vertex);
@@ -399,6 +420,97 @@ namespace csgame
 
             return program;
         }
+
+        private uint Create2DShader()
+        {
+            string vertex = @"#version 330 core
+
+            layout(location = 0) in vec3 aPos;
+            layout(location = 1) in vec2 aTexCoord;
+
+            out vec2 TexCoord;
+
+            uniform mat4 model;
+            uniform mat4 view;
+            uniform mat4 projection;
+            uniform int uScreenSpace;
+            uniform vec2 uResolution;
+
+            void main()
+            {
+                if (uScreenSpace == 1)
+                {
+                    gl_Position = 
+                        projection * 
+                        model * 
+                        vec4(aPos, 1.0);
+                    TexCoord = aTexCoord;
+                }
+                else
+                {
+                    gl_Position =
+                        projection *
+                        view *
+                        model *
+                        vec4(aPos, 1.0);
+                        
+                    TexCoord = aTexCoord;
+                }
+            }";
+
+            string fragment = @"#version 330 core
+
+            out vec4 FragColor;
+
+            in vec2 TexCoord;
+
+            uniform vec4 uColor;
+            uniform sampler2D uTexture;
+            uniform bool uUseTexture;
+
+            void main()
+            {
+                if (uUseTexture)
+                {
+                    FragColor =
+                        texture(uTexture, TexCoord)
+                        * uColor;
+                }
+                else
+                {
+                    FragColor = uColor;
+                }
+            }";
+
+            uint vs =
+                gl.CreateShader(
+                    ShaderType.VertexShader
+                );
+
+            gl.ShaderSource(vs, vertex);
+            gl.CompileShader(vs);
+
+            uint fs =
+                gl.CreateShader(
+                    ShaderType.FragmentShader
+                );
+
+            gl.ShaderSource(fs, fragment);
+            gl.CompileShader(fs);
+
+            uint program =
+                gl.CreateProgram();
+
+            gl.AttachShader(program, vs);
+            gl.AttachShader(program, fs);
+            gl.LinkProgram(program);
+
+            gl.DeleteShader(vs);
+            gl.DeleteShader(fs);
+
+            return program;
+        }
+
         public void SetVSync(bool enabled)
         {
             window.VSync = enabled;
@@ -414,7 +526,7 @@ namespace csgame
             return deltaTime;
         }
 
-        public void Close()  {window?.Close(); }
+        public void Close() { window?.Close(); }
 
         public void LockAndHideMouse(bool lockMouse, bool hideMouse)
         {
@@ -426,12 +538,10 @@ namespace csgame
             }
             else if (lockMouse && !hideMouse)
             {
-                // Adjust this if your engine uses a different enum for locked-but-visible
                 primaryMouse.Cursor.CursorMode = CursorMode.Disabled;
             }
             else if (!lockMouse && hideMouse)
             {
-                // Adjust this if your engine uses a different enum for hidden-but-unlocked
                 primaryMouse.Cursor.CursorMode = CursorMode.Hidden;
             }
             else
@@ -444,15 +554,10 @@ namespace csgame
         {
             if (primaryMouse != null)
             {
-                // Calculate the center coordinates of the window
                 float centerX = Width / 2f;
                 float centerY = Height / 2f;
 
-                // Warp the mouse position
                 primaryMouse.Position = new Vector2(centerX, centerY);
-
-                // Update lastMousePos so the next frame's 3D look calculation 
-                // doesn't cause a massive camera snap/jump
                 lastMousePos = new Vector2(centerX, centerY);
             }
         }
@@ -510,5 +615,3 @@ namespace csgame
         }
     }
 }
-
-

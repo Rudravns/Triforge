@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 
 # Add src directory to path so csgame can be imported
-sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent)    )
 
 import triforge
 
@@ -19,7 +19,7 @@ def run():
     window_size = triforge.Vector2(800, 600, triforge.CSINT)
     
     # Create the window
-    win = triforge.window(window_size, "test", False)
+    win = triforge.window(window_size, "test", True)
     cam = triforge.Camera()
     win.set_camera(cam)
     
@@ -33,12 +33,15 @@ def run():
         triforge.Vector2(-2.5, -2.5),
         triforge.Vector2(1.0, 1.0)
     )
-    text = triforge.Text("Hello World!", triforge.Vector2(-0.9, -0.9), 32, sky_blue)
-    fps = triforge.Text(f"FPS: 0", triforge.Vector2(-0.9, 0.9), 32, sky_blue)
-    txt2 = triforge.Text("Hello World!", triforge.Vector2(-0.9, -0.9), 32, sky_blue)
+    text = triforge.Text("Hello World!", triforge.Vector2(-0.9, -0.9), 14, sky_blue)
+    fps = triforge.Text(f"FPS: 0", triforge.Vector2(10, 10), 14, sky_blue)
+    txt2 = triforge.Text("Hello World!", triforge.Vector2(10, 550), 14, sky_blue)
     txt2.isScreenSpace = True
     cir = triforge.Circle(triforge.Vector2(3, 0), 0.5, sky_blue)
     rect3d = triforge.Rect3d(triforge.Vector3(0, 0, 5), triforge.Vector3(1, 1, 1), sky_blue)
+
+    donut = triforge.Model("Images/Blender/donut.obj", sky_blue)
+    mmonkey = triforge.Model("Images/Blender/monkey.obj", sky_blue)
     fps.isScreenSpace = True
     # Add the shape to the window's draw list
     win.add(rect3d)
@@ -50,7 +53,9 @@ def run():
     win.add(fps)
     win.add(txt2)
     win.add(shape2)
-    
+    #win.add(donut)
+    win.add(mmonkey)
+
     rect3d.assign_texture("Images/cs.png", triforge.CubeFace.FRONT)
     rect3d.assign_texture("Images/cs.png", triforge.CubeFace.BACK)
     rect3d.assign_texture("Images/cs.png", triforge.CubeFace.LEFT)
@@ -103,7 +108,7 @@ def run():
         is_lmb = win.isMousedown(triforge.MouseButton.LEFT)
         is_lmb_clicked = win.isMouseClicked(triforge.MouseButton.LEFT)
         text.text = f"pos: {cam.position}, rot: {cam.rotation}, p_down: {down}, LMB: {is_lmb}, Click: {is_lmb_clicked}"
-        txt2.text = f"mouse_pos: {win.mouse_pos}. {cir.position}"
+        txt2.text = f"mouse_pos: {win.mouse_pos}"
 
 
 

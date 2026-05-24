@@ -6,7 +6,7 @@ import System
 
 
 class Color:
-    def __init__(self, red, green, blue, alpha=1):
+    def __init__(self, red:float, green:float, blue:float, alpha:float=1.0):
         self.raw = cg.Vector4d[System.Single](
             System.Single(red), 
             System.Single(green), 

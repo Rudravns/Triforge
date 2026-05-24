@@ -41,6 +41,7 @@ from .image import Image, Text
 
 from .three_d_shapes import Rect3d
 
+from .objloader import Model
 
 # --- Metadata ---
 __version__ = "1.0.0"
@@ -68,7 +69,9 @@ __all__ = [
     'Rect3d',
     'Camera',
     'KeyboardKey',
-    'CubeFace'
+    'CubeFace',
+    'Model',
+    'MouseButton'
 
 
 
